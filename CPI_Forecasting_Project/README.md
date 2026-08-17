@@ -1,62 +1,57 @@
-# CPI Forecasting Project (R for Posit Cloud)
+# Malaysia Low-Income CPI Forecast
 
-## Purpose
+R/Posit Cloud group forecasting project for BMMS2094 Statistics for Data Science. The project structure follows the same group-work pattern as the supplied Ozone Forecast reference: shared setup and preparation scripts, one model script per member, model-specific plots, and a group comparison script.
 
-This R project forecasts Malaysia's monthly overall Consumer Price Index (CPI) for low-income households and relates the findings to **SDG 10: Reduced Inequalities**. Rising CPI may increase cost-of-living pressure for financially vulnerable households; forecasts may support the planning of targeted assistance, subsidies, and social protection. CPI does not directly measure income inequality, and households earning below RM3,000 are not automatically identical to Malaysia's bottom 40% population.
-
-## Group allocation
-
-| Group member | Forecasting model |
-| --- | --- |
-| Member 1 | Seasonal Naive baseline |
-| Member 2 | Holt-Winters Exponential Smoothing |
-| Member 3 | SARIMA(1,1,1)(1,1,1,12) |
-| Member 4 | Time-series regression with linear trend and monthly seasonal effects |
-
-Replace the placeholder labels with the four group members' names before submission. All models use the same chronological split: all observations except the final 12 months for training, and the final 12 months for testing.
-
-## File structure
+## Project structure
 
 ```text
 CPI_Forecasting_Project/
-|- cpi_2d_lowincome.csv
-|- cpi_forecasting.R
-|- CPI_Forecasting_Project.Rproj
-|- README.md
-`- outputs/
-   |- figures/     # PNG charts produced by the R script
-   `- tables/      # CSV tables produced by the R script
+|- data/
+|  |- cpi_2d_lowincome.csv
+|  `- generated .rds files after preparation
+|- scripts/
+|  |- 00_setup.R
+|  |- 01_data_prep.R
+|  |- 02_Member_A_snaive.R
+|  |- 03_Member_B_holt_winters.R
+|  |- 04_Member_C_sarima.R
+|  |- 05_Member_D_tslm.R
+|  `- 06_group_comparison.R
+|- output/
+|  |- plots/                 # model-specific PNG figures
+|  `- model_comparison_summary.csv
+|- CONTEXT.md
+`- project.Rproj
 ```
 
-## Run in Posit Cloud
+## Group allocation
 
-1. Create a new Posit Cloud project and upload the full `CPI_Forecasting_Project` folder.
-2. Open `cpi_forecasting.R` and make the project folder your working directory.
-3. In the R Console, install the packages once:
+| Member | Forecasting model | Relative difficulty | Script |
+| --- | --- | --- | --- |
+| Huxley | Seasonal Naive baseline | Easiest | `02_Member_A_snaive.R` |
+| Tan Wei Ching | Trend and monthly seasonal-dummy regression | Intermediate | `05_Member_D_tslm.R` |
+| Ooi Mei Yi | Holt-Winters additive exponential smoothing | Advanced | `03_Member_B_holt_winters.R` |
+| Steven | SARIMA(1,1,1)(1,1,1)[12] | Most advanced | `04_Member_C_sarima.R` |
+
+The scripts and output labels already use your group members' names.
+
+## Posit Cloud workflow
+
+1. Upload the project folder to Posit Cloud and open `project.Rproj`.
+2. Run `scripts/00_setup.R` once per session. It installs and loads `readr`, `dplyr`, `ggplot2`, `forecast`, and `tseries` if required.
+3. Run the scripts in this order:
 
 ```r
-install.packages(c("readr", "dplyr", "ggplot2", "forecast"))
+source("scripts/01_data_prep.R")
+source("scripts/02_Member_A_snaive.R")
+source("scripts/03_Member_B_holt_winters.R")
+source("scripts/04_Member_C_sarima.R")
+source("scripts/05_Member_D_tslm.R")
+source("scripts/06_group_comparison.R")
 ```
 
-4. Run the whole script using **Source** in Posit Cloud, or use the Terminal:
+`01_data_prep.R` validates the original CSV, prepares the CPI series, and creates the common final-12-month holdout split. Each member script writes its own forecast accuracy table and 300-DPI plots. The final script combines all four members' MASE, RMSE, MAE, and MAPE values into `output/model_comparison_summary.csv`.
 
-```bash
-Rscript cpi_forecasting.R
-```
+## SDG 10 framing
 
-The script uses only relative project paths, so no computer-specific file paths are required.
-
-`cpi_forecasting.py` and `requirements.txt` are retained only as the earlier Python version; use `cpi_forecasting.R` for the Posit/R workflow.
-
-## Generated outputs
-
-`outputs/tables/` contains the prepared CPI dataset, descriptive statistics, training and testing datasets, test-period forecasts, and MAE/RMSE/MAPE accuracy metrics.
-
-`outputs/figures/` contains 13 report-ready 300-DPI PNG charts: CPI, monthly change, year-on-year inflation, seasonality, decomposition, ACF/PACF, train-test split, four forecast plots, and the accuracy comparison.
-
-## Troubleshooting
-
-- **Package error:** run the `install.packages(...)` command above and rerun the script.
-- **CSV not found:** keep `cpi_2d_lowincome.csv` in the same folder as `cpi_forecasting.R`.
-- **Validation error:** read the printed message. The script stops if required columns are absent, values are missing, date-division records are duplicated, the `overall` series is absent, or a month is missing.
-- **Different results:** use the unedited supplied CSV. The script never overwrites it.
+Rising CPI may intensify cost-of-living pressure for financially vulnerable households. Forecasts can support planning for targeted assistance, subsidies, and social protection. CPI is not a direct measure of income inequality, and households earning below RM3,000 are not automatically identical to Malaysia's bottom 40% population.
