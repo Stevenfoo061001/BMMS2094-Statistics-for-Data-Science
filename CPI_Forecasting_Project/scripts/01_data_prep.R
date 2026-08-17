@@ -21,7 +21,7 @@ prepared <- overall %>% mutate(
   month_number = as.integer(format(date, "%m")),
   month_name = format(date, "%B")
 )
-training <- prepared %>% slice_head(n = n() - h)
+training <- prepared %>% slice_head(n = nrow(prepared) - h)
 testing <- prepared %>% slice_tail(n = h)
 
 dir.create("output", showWarnings = FALSE)
