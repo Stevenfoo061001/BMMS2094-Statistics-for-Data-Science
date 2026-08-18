@@ -22,3 +22,7 @@ Forecast Malaysia's monthly overall Consumer Price Index for low-income househol
 | Steven | `04_Member_C_sarima.R` | SARIMA(1,1,1)(1,1,1)[12] | Most advanced |
 
 The output directories retain Member A-D labels to match the reference project format; chart titles and accuracy tables use the group members' real names.
+
+## SARIMA diagnostic refinement
+
+If Steven's residual ACF has spikes beyond its confidence limits or the Ljung-Box p-value is below 0.05, run `scripts/07_Steven_sarima_testing.R`. It tests several seasonal ARIMA alternatives and compares their residual diagnostics and final-12-month accuracy. Do not overwrite the main SARIMA model unless the group approves the candidate.

@@ -50,6 +50,8 @@ source("scripts/05_Member_D_tslm.R")
 source("scripts/06_group_comparison.R")
 ```
 
+If Steven's residual ACF or Ljung-Box test indicates remaining autocorrelation, run `source("scripts/07_Steven_sarima_testing.R")`. It compares alternative SARIMA specifications and writes `output/steven_sarima_candidate_results.csv`; do not replace Steven's main model until the group has reviewed the diagnostics and holdout RMSE.
+
 `01_data_prep.R` validates the original CSV, prepares the CPI series, and creates the common final-12-month holdout split. Each member script writes its own forecast accuracy table and 300-DPI plots. The final script combines all four members' MASE, RMSE, MAE, and MAPE values into `output/model_comparison_summary.csv`.
 
 ## SDG 10 framing
