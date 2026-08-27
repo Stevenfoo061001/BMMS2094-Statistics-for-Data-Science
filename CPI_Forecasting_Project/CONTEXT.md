@@ -8,7 +8,7 @@ Forecast Malaysia's monthly overall Consumer Price Index for low-income househol
 
 - Target: the `index` value for `division == "overall"`.
 - Frequency: monthly; seasonal period: 12 months.
-- Split: chronological, with the final 12 months as the test set. No random shuffling.
+- Split: chronological, with January 2025 through June 2026 (18 months) as the test set. No random shuffling.
 - Common evaluation: MASE, RMSE, MAE, and MAPE. Lower values are better.
 - Data source file: `data/cpi_2d_lowincome.csv`; never edit it in place.
 
@@ -25,4 +25,4 @@ The output directories retain Member A-D labels to match the reference project f
 
 ## SARIMA diagnostic refinement
 
-If Steven's residual ACF has spikes beyond its confidence limits or the Ljung-Box p-value is below 0.05, run `scripts/07_Steven_sarima_testing.R`. It tests several seasonal ARIMA alternatives and compares their residual diagnostics and final-12-month accuracy. Do not overwrite the main SARIMA model unless the group approves the candidate.
+If Steven's residual ACF has spikes beyond its confidence limits or the Ljung-Box p-value is below 0.05, run `scripts/07_Steven_sarima_testing.R`. It tests several seasonal ARIMA alternatives and compares their residual diagnostics and January 2025-to-June 2026 holdout accuracy. Do not overwrite the main SARIMA model unless the group approves the candidate.

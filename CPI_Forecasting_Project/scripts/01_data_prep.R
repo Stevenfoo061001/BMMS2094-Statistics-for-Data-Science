@@ -24,6 +24,22 @@ prepared <- overall %>% mutate(
 training <- prepared %>% slice_head(n = nrow(prepared) - h)
 testing <- prepared %>% slice_tail(n = h)
 
+# Early exploratory plot: inspect the raw series for trend, level changes,
+# and possible seasonality before fitting any forecasting model.
+initial_series_plot <- ggplot(prepared, aes(x = date, y = index)) +
+  geom_line(linewidth = 0.7, colour = "#1F4E79") +
+  labs(
+    title = "Malaysia Overall CPI Time Series",
+    subtitle = "Monthly CPI index; inspect trend and potential seasonality before modelling",
+    x = "Date",
+    y = "CPI index"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(plot.title = element_text(face = "bold"))
+
+print(initial_series_plot)
+save_plot(initial_series_plot, "output/plots/01_initial_cpi_time_series.png")
+
 dir.create("output", showWarnings = FALSE)
 write_csv(prepared, "output/cleaned_overall_cpi.csv", na = "")
 write_csv(training, "output/training_data.csv", na = "")

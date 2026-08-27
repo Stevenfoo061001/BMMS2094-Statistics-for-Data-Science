@@ -7,7 +7,7 @@ if (!file.exists("data/training_data.rds")) source("scripts/01_data_prep.R")
 train <- readRDS("data/training_data.rds")
 test <- readRDS("data/testing_data.rds")
 train_ts <- ts(train$index, start = c(2010, 1), frequency = 12)
-test_ts <- ts(test$index, start = c(2025, 7), frequency = 12)
+test_ts <- ts(test$index, start = c(2025, 1), frequency = 12)
 out <- "output/plots/Member_C_sarima"
 
 # Ljung-Box p-value: values above 0.05 indicate no statistically significant
