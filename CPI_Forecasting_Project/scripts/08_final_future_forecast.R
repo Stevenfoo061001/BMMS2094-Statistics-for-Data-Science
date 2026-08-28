@@ -25,12 +25,12 @@ fit_final_model <- function(member, model, series, horizon) {
 
   if (member == "Steven") {
     candidates <- list(
-      "SARIMA(1,1,1)(1,1,1)[12]" = function() Arima(series, order = c(1, 1, 1), seasonal = list(order = c(1, 1, 1), period = 12)),
-      "SARIMA(0,1,1)(0,1,1)[12]" = function() Arima(series, order = c(0, 1, 1), seasonal = list(order = c(0, 1, 1), period = 12)),
-      "SARIMA(1,1,0)(1,1,0)[12]" = function() Arima(series, order = c(1, 1, 0), seasonal = list(order = c(1, 1, 0), period = 12)),
-      "SARIMA(1,1,1)(1,1,0)[12]" = function() Arima(series, order = c(1, 1, 1), seasonal = list(order = c(1, 1, 0), period = 12)),
-      "SARIMA(1,1,0)(0,1,1)[12]" = function() Arima(series, order = c(1, 1, 0), seasonal = list(order = c(0, 1, 1), period = 12)),
-      "auto.arima selected model" = function() auto.arima(series, seasonal = TRUE, stepwise = FALSE, approximation = FALSE)
+      "SARIMA(1,1,1)(1,1,1)[12]" = function() forecast::Arima(series, order = c(1, 1, 1), seasonal = list(order = c(1, 1, 1), period = 12)),
+      "SARIMA(0,1,1)(0,1,1)[12]" = function() forecast::Arima(series, order = c(0, 1, 1), seasonal = list(order = c(0, 1, 1), period = 12)),
+      "SARIMA(1,1,0)(1,1,0)[12]" = function() forecast::Arima(series, order = c(1, 1, 0), seasonal = list(order = c(1, 1, 0), period = 12)),
+      "SARIMA(1,1,1)(1,1,0)[12]" = function() forecast::Arima(series, order = c(1, 1, 1), seasonal = list(order = c(1, 1, 0), period = 12)),
+      "SARIMA(1,1,0)(0,1,1)[12]" = function() forecast::Arima(series, order = c(1, 1, 0), seasonal = list(order = c(0, 1, 1), period = 12)),
+      "auto.arima selected model" = function() forecast::auto.arima(series, seasonal = TRUE, stepwise = FALSE, approximation = FALSE)
     )
     return(forecast(candidates[[model]](), h = horizon))
   }

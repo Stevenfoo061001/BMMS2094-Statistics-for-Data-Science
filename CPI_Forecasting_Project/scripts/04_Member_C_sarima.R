@@ -17,7 +17,8 @@ out <- "output/plots/Member_C_sarima"
 evaluate_candidate <- function(name, model_function) {
   tryCatch({
     model <- model_function(selection_train_ts)
-    forecast_values <- as.numeric(forecast(model, h = validation_h)$mean)
+    forecast_values <- as.numeric(forecast::forecast(model, h = validation_h)$mean)
+    model_aicc <- tryCatch(as.numeric(model$aicc), error = function(error) NA_real_)
     ljung_box <- tryCatch(
       ljung_box_diagnostic(model, fitdf = length(coef(model))),
       error = function(error) tibble(Ljung_Box_lag = NA_real_, Ljung_Box_p_value = NA_real_, Ljung_Box_acceptable = "Unavailable")
@@ -27,7 +28,7 @@ evaluate_candidate <- function(name, model_function) {
       error = function(error) tibble(Residual_ACF_acceptable = "Unavailable", Residual_ACF_spike_lags = conditionMessage(error))
     )
     bind_cols(
-      tibble(model = name, AICc = model$aicc),
+      tibble(model = name, AICc = model_aicc),
       ljung_box,
       residual_acf,
       metrics(validation$index, forecast_values, selection_train$index) %>%
@@ -41,12 +42,12 @@ evaluate_candidate <- function(name, model_function) {
 # Candidates are selected with internal validation, preserving the final test
 # period for one unbiased evaluation after the selected model is refitted.
 candidates <- list(
-  "SARIMA(1,1,1)(1,1,1)[12]" = function(series) Arima(series, order = c(1, 1, 1), seasonal = list(order = c(1, 1, 1), period = 12)),
-  "SARIMA(0,1,1)(0,1,1)[12]" = function(series) Arima(series, order = c(0, 1, 1), seasonal = list(order = c(0, 1, 1), period = 12)),
-  "SARIMA(1,1,0)(1,1,0)[12]" = function(series) Arima(series, order = c(1, 1, 0), seasonal = list(order = c(1, 1, 0), period = 12)),
-  "SARIMA(1,1,1)(1,1,0)[12]" = function(series) Arima(series, order = c(1, 1, 1), seasonal = list(order = c(1, 1, 0), period = 12)),
-  "SARIMA(1,1,0)(0,1,1)[12]" = function(series) Arima(series, order = c(1, 1, 0), seasonal = list(order = c(0, 1, 1), period = 12)),
-  "auto.arima selected model" = function(series) auto.arima(series, seasonal = TRUE, stepwise = FALSE, approximation = FALSE)
+  "SARIMA(1,1,1)(1,1,1)[12]" = function(series) forecast::Arima(series, order = c(1, 1, 1), seasonal = list(order = c(1, 1, 1), period = 12)),
+  "SARIMA(0,1,1)(0,1,1)[12]" = function(series) forecast::Arima(series, order = c(0, 1, 1), seasonal = list(order = c(0, 1, 1), period = 12)),
+  "SARIMA(1,1,0)(1,1,0)[12]" = function(series) forecast::Arima(series, order = c(1, 1, 0), seasonal = list(order = c(1, 1, 0), period = 12)),
+  "SARIMA(1,1,1)(1,1,0)[12]" = function(series) forecast::Arima(series, order = c(1, 1, 1), seasonal = list(order = c(1, 1, 0), period = 12)),
+  "SARIMA(1,1,0)(0,1,1)[12]" = function(series) forecast::Arima(series, order = c(1, 1, 0), seasonal = list(order = c(0, 1, 1), period = 12)),
+  "auto.arima selected model" = function(series) forecast::auto.arima(series, seasonal = TRUE, stepwise = FALSE, approximation = FALSE)
 )
 
 candidate_results <- bind_rows(Map(evaluate_candidate, names(candidates), candidates)) %>%
@@ -78,7 +79,7 @@ if (nrow(acceptable_results) > 0) {
 }
 
 recommended_model <- candidates[[recommended_name]](train_ts)
-recommended_forecast <- forecast(recommended_model, h = h)
+recommended_forecast <- forecast::forecast(recommended_model, h = h)
 cat("\n", recommendation_note, "\nSelected candidate:", recommended_name, "\n", sep = "")
 
 # This becomes Steven's selected SARIMA result for the group comparison.
