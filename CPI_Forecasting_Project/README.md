@@ -31,7 +31,7 @@ CPI_Forecasting_Project/
 | Huxley | Seasonal Naive baseline | Easiest | `02_Member_A_snaive.R` |
 | Tan Wei Ching | Trend and monthly seasonal-dummy regression | Intermediate | `05_Member_D_tslm.R` |
 | Ooi Mei Yi | Holt-Winters additive exponential smoothing | Advanced | `03_Member_B_holt_winters.R` |
-| Steven | SARIMA(1,1,1)(1,1,1)[12] | Most advanced | `04_Member_C_sarima.R` |
+| Steven | Selected SARIMA candidate | Most advanced | `04_Member_C_sarima.R` |
 
 The scripts and output labels already use your group members' names.
 
@@ -48,9 +48,12 @@ source("scripts/03_Member_B_holt_winters.R")
 source("scripts/04_Member_C_sarima.R")
 source("scripts/05_Member_D_tslm.R")
 source("scripts/06_group_comparison.R")
+source("scripts/08_final_future_forecast.R")
 ```
 
-If Steven's residual ACF or Ljung-Box test indicates remaining autocorrelation, run `source("scripts/07_Steven_sarima_testing.R")`. It compares alternative SARIMA specifications and writes `output/steven_sarima_candidate_results.csv`; do not replace Steven's main model until the group has reviewed the diagnostics and holdout RMSE.
+`04_Member_C_sarima.R` compares SARIMA candidates, selects the lowest-RMSE model that passes both the Ljung-Box and residual-ACF checks, and writes Steven's selected result to `output/member_C_accuracy.csv`.
+
+`08_final_future_forecast.R` refits the winning acceptable model on all observations through June 2026 and produces a 12-month future forecast. Change `future_h` in `scripts/00_setup.R` if you need a different forecast horizon.
 
 `01_data_prep.R` validates the original CSV, prepares the CPI series, and creates the common holdout split from January 2025 through June 2026 (18 months). Each member script writes its own forecast accuracy table and 300-DPI plots. The final script combines all four members' MASE, RMSE, MAE, and MAPE values into `output/model_comparison_summary.csv`.
 

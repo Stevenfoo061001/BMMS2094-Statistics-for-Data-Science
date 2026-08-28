@@ -11,8 +11,14 @@ save_plot(autoplot(train_ts) + labs(title = "Huxley: Overall CPI Training Series
 save_plot(ggseasonplot(train_ts, year.labels = TRUE) + labs(title = "Huxley: CPI Seasonal Plot", y = "CPI index") + theme_minimal(), file.path(out, "Member_A_02_season.png"))
 fit <- snaive(train_ts, h = h)
 save_plot(autoplot(fit) + autolayer(test_ts, series = "Actual test CPI") + labs(title = "Huxley: Seasonal Naive 18-Month Holdout Forecast", x = "Year", y = "CPI index") + theme_minimal(), file.path(out, "Member_A_03_forecast.png"))
+png(file.path(out, "Member_A_04_residuals.png"), width = 3300, height = 2400, res = 300)
+checkresiduals(fit, lag = 24)
+dev.off()
 accuracy_A <- metrics(test$index, as.numeric(fit$mean), train$index) %>%
-  bind_cols(ljung_box_diagnostic(fit, fitdf = 0)) %>%
+  bind_cols(ljung_box_diagnostic(fit, fitdf = 0), residual_acf_diagnostic(fit)) %>%
+  mutate(Residuals_acceptable = if_else(
+    Ljung_Box_acceptable == "Yes" & Residual_ACF_acceptable == "Yes", "Yes", "No"
+  )) %>%
   mutate(member = "Huxley", model = "Seasonal Naive") %>% select(member, model, everything())
 write_csv(accuracy_A, "output/member_A_accuracy.csv")
 print(accuracy_A)

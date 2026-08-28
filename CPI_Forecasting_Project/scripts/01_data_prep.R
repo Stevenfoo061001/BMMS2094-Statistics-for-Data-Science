@@ -23,6 +23,38 @@ prepared <- overall %>% mutate(
 )
 training <- prepared %>% slice_head(n = nrow(prepared) - h)
 testing <- prepared %>% slice_tail(n = h)
+train_ts <- ts(training$index, start = c(training$year[1], training$month_number[1]), frequency = seasonal_period)
+
+# Validate the training data before model fitting. The held-out period is not
+# used here, so these diagnostics do not leak test information into modelling.
+adf_result <- adf.test(train_ts)
+kpss_result <- kpss.test(train_ts)
+first_difference <- diff(train_ts)
+first_difference_acf <- Acf(first_difference, lag.max = 24, plot = FALSE)
+lag_12_acf <- as.numeric(first_difference_acf$acf[13])
+acf_significance_limit <- qnorm(0.975) / sqrt(length(first_difference))
+
+stationarity_diagnostics <- tibble(
+  diagnostic = c("ADF test", "KPSS test", "Seasonal ACF at lag 12 (first difference)"),
+  null_hypothesis = c(
+    "Series has a unit root (non-stationary)",
+    "Series is stationary",
+    "No annual autocorrelation after first differencing"
+  ),
+  statistic = c(unname(adf_result$statistic), unname(kpss_result$statistic), lag_12_acf),
+  p_value = c(adf_result$p.value, kpss_result$p.value, NA_real_),
+  conclusion = c(
+    if_else(adf_result$p.value < 0.05, "Reject unit root", "Do not reject unit root"),
+    if_else(kpss_result$p.value > 0.05, "Do not reject stationarity", "Reject stationarity"),
+    if_else(abs(lag_12_acf) > acf_significance_limit,
+            "Evidence of annual seasonal correlation", "No clear annual seasonal correlation")
+  )
+)
+
+level_stationary <- adf_result$p.value < 0.05 && kpss_result$p.value > 0.05
+cat("Level series stationary:", if_else(level_stationary, "Yes", "No"), "\n")
+cat("Seasonal ACF at lag 12 after first differencing:", round(lag_12_acf, 3),
+    "(approximate 95% limit: +/-", round(acf_significance_limit, 3), ")\n", sep = "")
 
 # Early exploratory plot: inspect the raw series for trend, level changes,
 # and possible seasonality before fitting any forecasting model.
@@ -40,7 +72,27 @@ initial_series_plot <- ggplot(prepared, aes(x = date, y = index)) +
 print(initial_series_plot)
 save_plot(initial_series_plot, "output/plots/01_initial_cpi_time_series.png")
 
+seasonal_plot <- ggseasonplot(train_ts, year.labels = TRUE) +
+  labs(
+    title = "CPI Seasonal Plot: Training Data",
+    subtitle = "Compare the month-by-month shape across years",
+    x = "Month",
+    y = "CPI index"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(plot.title = element_text(face = "bold"))
+save_plot(seasonal_plot, "output/plots/02_training_seasonal_plot.png")
+
+png("output/plots/03_training_acf.png", width = 3300, height = 1500, res = 300)
+Acf(train_ts, lag.max = 36, main = "Training CPI ACF: Raw Series")
+dev.off()
+
+png("output/plots/04_first_difference_acf.png", width = 3300, height = 1500, res = 300)
+Acf(first_difference, lag.max = 36, main = "Training CPI ACF: First-Differenced Series")
+dev.off()
+
 dir.create("output", showWarnings = FALSE)
+write_csv(stationarity_diagnostics, "output/stationarity_diagnostics.csv")
 write_csv(prepared, "output/cleaned_overall_cpi.csv", na = "")
 write_csv(training, "output/training_data.csv", na = "")
 write_csv(testing, "output/testing_data.csv", na = "")
