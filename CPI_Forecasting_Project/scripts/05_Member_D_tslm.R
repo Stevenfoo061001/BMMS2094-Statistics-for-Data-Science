@@ -45,12 +45,15 @@ write_csv(candidate_results, "output/member_D_candidate_results.csv")
 print(candidate_results)
 
 acceptable_results <- candidate_results %>% filter(Residuals_acceptable == "Yes")
-if (nrow(acceptable_results) == 0) {
-  stop("No regression candidate passed both residual checks. Review output/member_D_candidate_results.csv.")
+if (nrow(acceptable_results) > 0) {
+  recommended_name <- acceptable_results$model[which.min(acceptable_results$Validation_RMSE)]
+  recommendation_note <- "Recommended: lowest validation-RMSE candidate passing both residual checks."
+} else {
+  recommended_name <- candidate_results$model[which.min(candidate_results$Validation_RMSE)]
+  recommendation_note <- "Fallback: no candidate passed both residual checks; selected the lowest validation-RMSE candidate."
 }
-
-recommended_name <- acceptable_results$model[which.min(acceptable_results$Validation_RMSE)]
 fit_model <- candidates[[recommended_name]](train_ts)
+cat("\n", recommendation_note, "\nSelected candidate:", recommended_name, "\n", sep = "")
 fit <- forecast(fit_model, h = h)
 
 save_plot(autoplot(train_ts) + labs(title = "Tan Wei Ching: Overall CPI Training Series", x = "Year", y = "CPI index") + theme_minimal(), file.path(out, "Member_D_01_autoplot.png"))

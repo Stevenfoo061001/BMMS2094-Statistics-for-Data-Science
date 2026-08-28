@@ -33,11 +33,11 @@ evaluate_candidate <- function(name, model_function) {
 # Candidates are selected with internal validation, preserving the final test
 # period for one unbiased evaluation after the selected model is refitted.
 candidates <- list(
-  "SARIMA(1,1,1)(1,1,1)[12]" = function(series) Arima(series, order = c(1, 1, 1), seasonal = c(1, 1, 1)),
-  "SARIMA(0,1,1)(0,1,1)[12]" = function(series) Arima(series, order = c(0, 1, 1), seasonal = c(0, 1, 1)),
-  "SARIMA(1,1,0)(1,1,0)[12]" = function(series) Arima(series, order = c(1, 1, 0), seasonal = c(1, 1, 0)),
-  "SARIMA(1,1,1)(1,1,0)[12]" = function(series) Arima(series, order = c(1, 1, 1), seasonal = c(1, 1, 0)),
-  "SARIMA(1,1,0)(0,1,1)[12]" = function(series) Arima(series, order = c(1, 1, 0), seasonal = c(0, 1, 1)),
+  "SARIMA(1,1,1)(1,1,1)[12]" = function(series) Arima(series, order = c(1, 1, 1), seasonal = list(order = c(1, 1, 1), period = 12)),
+  "SARIMA(0,1,1)(0,1,1)[12]" = function(series) Arima(series, order = c(0, 1, 1), seasonal = list(order = c(0, 1, 1), period = 12)),
+  "SARIMA(1,1,0)(1,1,0)[12]" = function(series) Arima(series, order = c(1, 1, 0), seasonal = list(order = c(1, 1, 0), period = 12)),
+  "SARIMA(1,1,1)(1,1,0)[12]" = function(series) Arima(series, order = c(1, 1, 1), seasonal = list(order = c(1, 1, 0), period = 12)),
+  "SARIMA(1,1,0)(0,1,1)[12]" = function(series) Arima(series, order = c(1, 1, 0), seasonal = list(order = c(0, 1, 1), period = 12)),
   "auto.arima selected model" = function(series) auto.arima(series, seasonal = TRUE, stepwise = FALSE, approximation = FALSE)
 )
 
@@ -57,7 +57,8 @@ if (nrow(acceptable_results) > 0) {
   recommended_name <- acceptable_results$model[which.min(acceptable_results$Validation_RMSE)]
   recommendation_note <- "Recommended: lowest-RMSE candidate passing Ljung-Box and residual ACF checks."
 } else {
-  stop("No SARIMA candidate passed both residual checks. Review output/steven_sarima_candidate_results.csv.")
+  recommended_name <- candidate_results$model[which.min(candidate_results$Validation_RMSE)]
+  recommendation_note <- "Fallback: no candidate passed both residual checks; selected the lowest validation-RMSE candidate."
 }
 
 recommended_model <- candidates[[recommended_name]](train_ts)
@@ -81,10 +82,10 @@ accuracy_C <- metrics(test$index, as.numeric(recommended_forecast$mean), train$i
 write_csv(accuracy_C, "output/member_C_accuracy.csv")
 print(accuracy_C)
 
-comparison_plot <- ggplot(candidate_results, aes(reorder(model, RMSE), RMSE, fill = Residuals_acceptable)) +
+comparison_plot <- ggplot(candidate_results, aes(reorder(model, Validation_RMSE), Validation_RMSE, fill = Residuals_acceptable)) +
   geom_col() + coord_flip() +
   scale_fill_manual(values = c("Yes" = "#1b9e77", "No" = "#d95f02")) +
-  labs(title = "Steven: SARIMA Candidate Comparison", subtitle = "Green = Ljung-Box and residual ACF checks passed", x = "SARIMA candidate", y = "Test RMSE", fill = "Residuals acceptable") +
+  labs(title = "Steven: SARIMA Candidate Comparison", subtitle = "Green = Ljung-Box and residual ACF checks passed", x = "SARIMA candidate", y = "Validation RMSE", fill = "Residuals acceptable") +
   theme_minimal()
 save_plot(comparison_plot, file.path(out, "Member_C_06_candidate_comparison.png"), width = 12, height = 6)
 
