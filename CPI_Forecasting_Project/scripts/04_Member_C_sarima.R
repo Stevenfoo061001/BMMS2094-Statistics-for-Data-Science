@@ -18,10 +18,18 @@ evaluate_candidate <- function(name, model_function) {
   tryCatch({
     model <- model_function(selection_train_ts)
     forecast_values <- as.numeric(forecast(model, h = validation_h)$mean)
+    ljung_box <- tryCatch(
+      ljung_box_diagnostic(model, fitdf = length(coef(model))),
+      error = function(error) tibble(Ljung_Box_lag = NA_real_, Ljung_Box_p_value = NA_real_, Ljung_Box_acceptable = "Unavailable")
+    )
+    residual_acf <- tryCatch(
+      residual_acf_diagnostic(model),
+      error = function(error) tibble(Residual_ACF_acceptable = "Unavailable", Residual_ACF_spike_lags = conditionMessage(error))
+    )
     bind_cols(
       tibble(model = name, AICc = model$aicc),
-      ljung_box_diagnostic(model, fitdf = length(coef(model))),
-      residual_acf_diagnostic(model),
+      ljung_box,
+      residual_acf,
       metrics(validation$index, forecast_values, selection_train$index) %>%
         rename_with(~ paste0("Validation_", .x))
     )
@@ -76,8 +84,14 @@ cat("\n", recommendation_note, "\nSelected candidate:", recommended_name, "\n", 
 # This becomes Steven's selected SARIMA result for the group comparison.
 accuracy_C <- metrics(test$index, as.numeric(recommended_forecast$mean), train$index) %>%
   bind_cols(
-    ljung_box_diagnostic(recommended_model, fitdf = length(coef(recommended_model))),
-    residual_acf_diagnostic(recommended_model)
+    tryCatch(
+      ljung_box_diagnostic(recommended_model, fitdf = length(coef(recommended_model))),
+      error = function(error) tibble(Ljung_Box_lag = NA_real_, Ljung_Box_p_value = NA_real_, Ljung_Box_acceptable = "Unavailable")
+    ),
+    tryCatch(
+      residual_acf_diagnostic(recommended_model),
+      error = function(error) tibble(Residual_ACF_acceptable = "Unavailable", Residual_ACF_spike_lags = conditionMessage(error))
+    )
   ) %>%
   mutate(
     Residuals_acceptable = if_else(
