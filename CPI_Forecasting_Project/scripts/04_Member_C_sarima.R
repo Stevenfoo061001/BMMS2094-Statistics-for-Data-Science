@@ -26,7 +26,7 @@ evaluate_candidate <- function(name, model_function) {
         rename_with(~ paste0("Validation_", .x))
     )
   }, error = function(error) {
-    tibble(model = name, AICc = NA_real_, Ljung_Box_lag = NA_real_, Ljung_Box_p_value = NA_real_, Ljung_Box_acceptable = NA_character_, Residual_ACF_acceptable = NA_character_, Residual_ACF_spike_lags = NA_character_, Validation_MAE = NA_real_, Validation_RMSE = NA_real_, Validation_MAPE = NA_real_, Validation_MASE = NA_real_)
+    tibble(model = name, AICc = NA_real_, Ljung_Box_lag = NA_real_, Ljung_Box_p_value = NA_real_, Ljung_Box_acceptable = NA_character_, Residual_ACF_acceptable = NA_character_, Residual_ACF_spike_lags = NA_character_, Validation_MAE = NA_real_, Validation_RMSE = NA_real_, Validation_MAPE = NA_real_, Validation_MASE = NA_real_, Error_Message = conditionMessage(error))
   })
 }
 
@@ -49,6 +49,14 @@ candidate_results <- bind_rows(Map(evaluate_candidate, names(candidates), candid
 
 write_csv(candidate_results, "output/steven_sarima_candidate_results.csv")
 print(candidate_results)
+
+if (all(is.na(candidate_results$Validation_RMSE))) {
+  stop(
+    "All SARIMA candidates failed to fit. First error: ",
+    candidate_results$Error_Message[1],
+    ". See output/steven_sarima_candidate_results.csv for every error."
+  )
+}
 
 # Prefer a model with acceptable residuals. If none pass, select the smallest
 # Ljung-Box issue first, then report that further refinement is required.
