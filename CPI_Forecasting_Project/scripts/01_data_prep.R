@@ -87,7 +87,18 @@ png("output/plots/03_training_acf.png", width = 3300, height = 1500, res = 300)
 Acf(train_ts, lag.max = 36, main = "Training CPI ACF: Raw Series")
 dev.off()
 
-png("output/plots/04_first_difference_acf.png", width = 3300, height = 1500, res = 300)
+first_difference_plot <- autoplot(first_difference) +
+  labs(
+    title = "Training CPI: First-Differenced Series",
+    subtitle = "Month-to-month change after removing the long-term trend",
+    x = "Year",
+    y = "Change in CPI index"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(plot.title = element_text(face = "bold"))
+save_plot(first_difference_plot, "output/plots/04_first_difference_series.png")
+
+png("output/plots/05_first_difference_acf.png", width = 3300, height = 1500, res = 300)
 Acf(first_difference, lag.max = 36, main = "Training CPI ACF: First-Differenced Series")
 dev.off()
 
