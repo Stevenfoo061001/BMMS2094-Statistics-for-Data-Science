@@ -11,6 +11,9 @@ validation <- train %>% slice_tail(n = validation_h)
 train_ts <- ts(train$index, start = c(2010, 1), frequency = 12)
 selection_train_ts <- ts(selection_train$index, start = c(2010, 1), frequency = 12)
 test_ts <- ts(test$index, start = c(2025, 1), frequency = 12)
+validation_ts <- ts(validation$index,
+                    start = c(validation$year[1], validation$month_number[1]),
+                    frequency = 12)
 out <- "output/plots/Member_C_sarima"
 
 # Standard Member C plot sequence, matching the familiar naming convention
@@ -66,7 +69,7 @@ evaluate_candidate <- function(model_key, selected_variant, model_function) {
       tibble(AICc = model_aicc),
       arima_metadata(model, model_key, selected_variant),
       residual_diagnostics(model, fitdf = length(coef(model))),
-      overfitting_diagnostic(validation_forecast, validation$index) %>%
+      overfitting_diagnostic(validation_forecast, validation_ts) %>%
         rename_with(~ paste0("Validation_", .x)),
       metrics(validation$index, forecast_values, selection_train$index) %>%
         rename_with(~ paste0("Validation_", .x))
