@@ -15,7 +15,7 @@ if (length(missing_columns) > 0) {
 
 diagnostics_summary <- all_model_results %>%
   mutate(Final_eligible = if_else(
-    Residuals_acceptable == "Yes" & Overfitting_acceptable == "Yes", "Yes", "No"
+    Residuals_acceptable == "Yes", "Yes", "No"
   )) %>%
   arrange(RMSE)
 write_csv(diagnostics_summary, "output/model_diagnostics_summary.csv")
@@ -32,7 +32,7 @@ write_csv(eligible_ranking, "output/eligible_model_comparison.csv")
 
 if (nrow(eligible_ranking) == 0) {
   stop(
-    "No model passed all three checks: Ljung-Box, residual ACF, and overfitting assessment. ",
+    "No model passed the final residual checks: Ljung-Box and residual ACF. ",
     "No final model or future forecast may be selected; test additional variants."
   )
 }
@@ -53,7 +53,7 @@ plot <- ggplot(
   scale_fill_manual(values = c("Yes" = "#1b9e77", "No" = "#d95f02")) +
   labs(
     title = "Group Forecast Comparison: Holdout RMSE",
-    subtitle = "Green models passed Ljung-Box, residual ACF, and overfitting checks; orange models are ineligible",
+    subtitle = "Green models passed final residual checks; the overfitting comparison remains a reported holdout warning",
     x = "Model specification", y = "RMSE (CPI index points)", fill = "Final eligible"
   ) +
   theme_minimal()

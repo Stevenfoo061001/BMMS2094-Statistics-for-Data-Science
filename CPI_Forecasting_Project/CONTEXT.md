@@ -20,7 +20,7 @@ Forecast Malaysia's monthly overall Consumer Price Index for low-income househol
 - The Ljung–Box p-value must be above 0.05 for residuals to be acceptable.
 - Up to three isolated residual-ACF spikes are acceptable. Consecutive spikes or more than three spikes are unacceptable.
 - Training-versus-final-test RMSE/MAPE is recorded as an overfitting check. A test-to-training RMSE ratio of 1.5 or above is a warning for interpretation, not an automatic rejection rule.
-- The final model is the lowest-final-holdout-RMSE model among models passing all three checks: Ljung–Box, residual ACF, and the overfitting assessment. A lower-RMSE but ineligible model is not selected.
+- The final model is the lowest-final-holdout-RMSE model among models passing the final Ljung–Box and residual-ACF checks. Steven's candidate selection also applies the overfitting check during internal validation; the final holdout overfitting comparison is reported as a generalisation warning, not used to tune against the untouched test set.
 
 ## Group allocation
 
