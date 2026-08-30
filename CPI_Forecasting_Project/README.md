@@ -34,7 +34,7 @@ Members select a variant within their assigned family using only the internal va
 | Steven | ARIMA/SARIMA (manual candidates and automatic ARIMA) | `04_Member_C_sarima.R` |
 | Tan Wei Ching | Time-series regression (trend/seasonal/quadratic variants) | `05_Member_D_tslm.R` |
 
-A model is eligible for final selection only when its Ljung–Box p-value is above 0.05 and its residual ACF is acceptable. Up to three isolated significant ACF spikes are allowed; consecutive or more numerous spikes are not. The final model is the eligible model with the lowest **final-holdout RMSE**—never the lowest-RMSE model overall without diagnostics.
+A model is eligible for final selection only when its Ljung–Box p-value is above 0.05, its residual ACF is acceptable, and it has no training-versus-test overfitting warning. Up to three isolated significant ACF spikes are allowed; consecutive or more numerous spikes are not. The final model is the eligible model with the lowest **final-holdout RMSE**—never the lowest-RMSE model overall without diagnostics.
 
 Each member accuracy output also compares training and final-holdout RMSE/MAPE. A test-to-training RMSE ratio of 1.5 or above is flagged as a possible overfitting warning; it is interpreted alongside holdout accuracy and residual diagnostics rather than used as an automatic rejection rule.
 

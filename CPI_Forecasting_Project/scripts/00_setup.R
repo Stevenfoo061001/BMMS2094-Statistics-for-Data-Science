@@ -170,7 +170,7 @@ overfitting_diagnostic <- function(forecast_object, actual_values) {
     return(tibble(
       Training_RMSE = NA_real_, Test_RMSE = NA_real_, RMSE_ratio = NA_real_,
       Training_MAPE = NA_real_, Test_MAPE = NA_real_,
-      Overfitting_assessment = "Unavailable"
+      Overfitting_acceptable = "Unavailable", Overfitting_assessment = "Unavailable"
     ))
   }
 
@@ -189,6 +189,7 @@ overfitting_diagnostic <- function(forecast_object, actual_values) {
   tibble(
     Training_RMSE = training_rmse, Test_RMSE = test_rmse, RMSE_ratio = rmse_ratio,
     Training_MAPE = training_mape, Test_MAPE = test_mape,
+    Overfitting_acceptable = if_else(!is.na(rmse_ratio) && rmse_ratio < overfit_rmse_ratio_warning, "Yes", "No"),
     Overfitting_assessment = assessment
   )
 }

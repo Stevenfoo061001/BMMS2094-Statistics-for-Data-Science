@@ -6,7 +6,7 @@ if (!all(file.exists(required_files))) stop("Run scripts 02-05 before running th
 
 all_model_results <- bind_rows(lapply(required_files, read_csv, show_col_types = FALSE))
 required_columns <- c("member", "model_family", "selected_variant", "model_specification",
-                      "RMSE", "Residuals_acceptable", "Diagnostic_note")
+                      "RMSE", "Residuals_acceptable", "Overfitting_acceptable", "Diagnostic_note")
 missing_columns <- setdiff(required_columns, names(all_model_results))
 if (length(missing_columns) > 0) {
   stop("Member accuracy outputs are outdated. Re-run scripts 02-05. Missing columns: ",
@@ -14,7 +14,9 @@ if (length(missing_columns) > 0) {
 }
 
 diagnostics_summary <- all_model_results %>%
-  mutate(Final_eligible = if_else(Residuals_acceptable == "Yes", "Yes", "No")) %>%
+  mutate(Final_eligible = if_else(
+    Residuals_acceptable == "Yes" & Overfitting_acceptable == "Yes", "Yes", "No"
+  )) %>%
   arrange(RMSE)
 write_csv(diagnostics_summary, "output/model_diagnostics_summary.csv")
 
@@ -24,14 +26,14 @@ accuracy_ranking <- diagnostics_summary %>% arrange(RMSE)
 write_csv(accuracy_ranking, "output/model_comparison_summary.csv")
 
 eligible_ranking <- diagnostics_summary %>%
-  filter(Residuals_acceptable == "Yes") %>%
+  filter(Final_eligible == "Yes") %>%
   arrange(RMSE)
 write_csv(eligible_ranking, "output/eligible_model_comparison.csv")
 
 if (nrow(eligible_ranking) == 0) {
   stop(
-    "No diagnostically acceptable model is available. No final model or future forecast may be selected. ",
-    "Review the member diagnostic notes and test additional variants."
+    "No model passed all three checks: Ljung-Box, residual ACF, and overfitting assessment. ",
+    "No final model or future forecast may be selected; test additional variants."
   )
 }
 
@@ -51,7 +53,7 @@ plot <- ggplot(
   scale_fill_manual(values = c("Yes" = "#1b9e77", "No" = "#d95f02")) +
   labs(
     title = "Group Forecast Comparison: Holdout RMSE",
-    subtitle = "Green models are eligible for final selection; orange models failed residual diagnostics",
+    subtitle = "Green models passed Ljung-Box, residual ACF, and overfitting checks; orange models are ineligible",
     x = "Model specification", y = "RMSE (CPI index points)", fill = "Final eligible"
   ) +
   theme_minimal()
