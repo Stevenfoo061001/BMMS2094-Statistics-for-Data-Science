@@ -1,0 +1,2 @@
+member,model,MAE,RMSE,MAPE,MASE,Ljung_Box_lag,Ljung_Box_p_value,Ljung_Box_acceptable,Residual_ACF_acceptable,Residual_ACF_spike_lags,Residuals_acceptable
+Ooi Mei Yi,Holt linear trend,0.5502218942282818,0.6270347007905033,0.40554376244014095,0.2101802597324951,24,0.005320392987541056,No,No,"1, 15",No

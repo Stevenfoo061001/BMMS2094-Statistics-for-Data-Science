@@ -1,0 +1,2 @@
+member,model,MAE,RMSE,MAPE,MASE,Ljung_Box_lag,Ljung_Box_p_value,Ljung_Box_acceptable,Residual_ACF_acceptable,Residual_ACF_spike_lags,Residuals_acceptable
+Tan Wei Ching,Trend only,0.4522064390800138,0.5199829032773455,0.33334339501497046,0.1727391581751758,24,0,No,No,"1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21",No

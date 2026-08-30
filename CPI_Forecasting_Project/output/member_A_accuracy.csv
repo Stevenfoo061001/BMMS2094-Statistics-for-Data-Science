@@ -1,0 +1,2 @@
+member,model,MAE,RMSE,MAPE,MASE,Ljung_Box_lag,Ljung_Box_p_value,Ljung_Box_acceptable,Residual_ACF_acceptable,Residual_ACF_spike_lags,Residuals_acceptable
+Huxley,Seasonal Naive,2.0722222222222197,2.2515426810177144,1.5274041890526457,0.7915719266333172,24,0,No,No,"1, 2, 3, 4, 5, 6, 7, 8, 9, 10",No
