@@ -15,10 +15,15 @@ png(file.path(out, "Member_A_04_residuals.png"), width = 3300, height = 2400, re
 checkresiduals(fit, lag = 24)
 dev.off()
 accuracy_A <- metrics(test$index, as.numeric(fit$mean), train$index) %>%
-  bind_cols(ljung_box_diagnostic(fit, fitdf = 0), residual_acf_diagnostic(fit)) %>%
-  mutate(Residuals_acceptable = if_else(
-    Ljung_Box_acceptable == "Yes" & Residual_ACF_acceptable == "Yes", "Yes", "No"
-  )) %>%
-  mutate(member = "Huxley", model = "Seasonal Naive") %>% select(member, model, everything())
+  bind_cols(residual_diagnostics(fit, fitdf = 0)) %>%
+  mutate(
+    member = "Huxley",
+    model_family = "Seasonal Naive",
+    selected_variant = "Seasonal Naive",
+    model_specification = "Seasonal Naive (monthly period = 12)",
+    model = model_specification
+  ) %>%
+  select(member, model_family, selected_variant, model_specification, model,
+         MAE, RMSE, MAPE, MASE, everything())
 write_csv(accuracy_A, "output/member_A_accuracy.csv")
 print(accuracy_A)

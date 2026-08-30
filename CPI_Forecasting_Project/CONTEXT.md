@@ -1,28 +1,41 @@
-# CPI Forecasting Project Context
+# CPI Forecasting Project Context (V2)
 
 ## Objective
 
 Forecast Malaysia's monthly overall Consumer Price Index for low-income households and interpret the analysis in relation to SDG 10: Reduced Inequalities.
 
-## Shared modelling rules
+## Scope and data rules
 
-- Target: the `index` value for `division == "overall"`.
-- Frequency: monthly; seasonal period: 12 months.
-- Split: chronological, with January 2025 through June 2026 (18 months) as the test set. No random shuffling.
-- Common evaluation: MASE, RMSE, MAE, and MAPE. Lower values are better.
-- Data source file: `data/cpi_2d_lowincome.csv`; never edit it in place.
+- Target: the `index` value where `division == "overall"`.
+- Frequency: monthly; seasonal period: 12.
+- Original source: `data/cpi_2d_lowincome.csv`; never edit it in place.
+- `ResultV1/` is archived. V2 analysis uses only `data/`, `scripts/`, and `output/`.
+
+## Evaluation and selection rules
+
+- Final test period: January 2025–June 2026 (18 months), held out chronologically.
+- Internal validation: January–December 2024 (12 months), used only to choose variants inside a member's assigned family.
+- Future forecast horizon: July 2026–June 2027 (12 months).
+- Accuracy: MASE, RMSE, MAE, and MAPE; lower is better.
+- The Ljung–Box p-value must be above 0.05 for residuals to be acceptable.
+- Up to three isolated residual-ACF spikes are acceptable. Consecutive spikes or more than three spikes are unacceptable.
+- The final model is the lowest-final-holdout-RMSE model among diagnostically acceptable models. A lower-RMSE but diagnostically unacceptable model is ineligible.
 
 ## Group allocation
 
-| Member | Script | Model | Relative difficulty |
+| Member | Script | Model family | Variant selection |
 | --- | --- | --- | --- |
-| Huxley | `02_Member_A_snaive.R` | Seasonal Naive baseline | Easiest |
-| Tan Wei Ching | `05_Member_D_tslm.R` | Trend plus monthly seasonal dummy regression | Intermediate |
-| Ooi Mei Yi | `03_Member_B_holt_winters.R` | Holt-Winters additive exponential smoothing | Advanced |
-| Steven | `04_Member_C_sarima.R` | Selected SARIMA candidate | Most advanced |
+| Huxley | `02_Member_A_snaive.R` | Seasonal Naive | Seasonal Naive baseline |
+| Ooi Mei Yi | `03_Member_B_holt_winters.R` | Exponential smoothing | Holt and Holt-Winters variants |
+| Steven | `04_Member_C_sarima.R` | ARIMA/SARIMA | Manual SARIMA candidates and `auto.arima` |
+| Tan Wei Ching | `05_Member_D_tslm.R` | Time-series regression | Trend-only, seasonal-dummy, and quadratic variants |
 
-The output directories retain Member A-D labels to match the reference project format; chart titles and accuracy tables use the group members' real names.
+Each script selects its variant with the internal validation period, records the selected specification, then evaluates once on the untouched final holdout. Steven's output records the actual automatic ARIMA order, including seasonal terms and drift/mean settings, so it can be reproduced.
 
-## SARIMA diagnostic refinement
+## Run order and outputs
 
-Use `scripts/04_Member_C_sarima.R` as Steven's SARIMA modelling step. It tests several seasonal ARIMA alternatives and selects the lowest-RMSE candidate that passes the Ljung-Box and residual-ACF checks on the January 2025-to-June 2026 holdout period.
+Run `01_data_prep.R`, member scripts `02` through `05`, `06_group_comparison.R`, then `08_final_future_forecast.R`. The group comparison writes all-model and eligible-only rankings plus `selected_final_model.csv`. The final forecast script reads that selected eligible model; it never picks a model only because it has the lowest RMSE.
+
+## SDG 10 framing
+
+Rising CPI may intensify cost-of-living pressure for financially vulnerable households. Forecasts can support planning for targeted assistance, subsidies, and social protection. CPI is not a direct measure of income inequality, and households earning below RM3,000 are not automatically identical to Malaysia's bottom 40% population.

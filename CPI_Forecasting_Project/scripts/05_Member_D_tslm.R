@@ -28,18 +28,23 @@ evaluate_candidate <- function(name, candidate_function) {
       tibble(model = name, AICc = fit_model$aicc),
       metrics(validation$index, as.numeric(fit$mean), selection_train$index) %>%
         rename_with(~ paste0("Validation_", .x)),
-      ljung_box_diagnostic(fit_model, fitdf = length(coef(fit_model))),
-      residual_acf_diagnostic(fit_model)
+      residual_diagnostics(fit_model, fitdf = length(coef(fit_model)))
     )
   }, error = function(error) {
-    tibble(model = name, AICc = NA_real_, Validation_MAE = NA_real_, Validation_RMSE = NA_real_, Validation_MAPE = NA_real_, Validation_MASE = NA_real_, Ljung_Box_lag = NA_real_, Ljung_Box_p_value = NA_real_, Ljung_Box_acceptable = NA_character_, Residual_ACF_acceptable = NA_character_, Residual_ACF_spike_lags = NA_character_)
+    tibble(
+      model = name, AICc = NA_real_, Validation_MAE = NA_real_,
+      Validation_RMSE = NA_real_, Validation_MAPE = NA_real_, Validation_MASE = NA_real_,
+      Ljung_Box_lag = NA_integer_, Ljung_Box_p_value = NA_real_,
+      Ljung_Box_acceptable = "Unavailable", Ljung_Box_decision = "Unavailable",
+      Residual_ACF_spike_count = NA_integer_, Residual_ACF_spike_lags = "Unavailable",
+      Residual_ACF_has_consecutive_spikes = "Unavailable",
+      Residual_ACF_pattern = "Unavailable", Residual_ACF_acceptable = "Unavailable",
+      Residuals_acceptable = "No", Diagnostic_note = "Candidate model failed to fit."
+    )
   })
 }
 
 candidate_results <- bind_rows(Map(evaluate_candidate, names(candidates), candidates)) %>%
-  mutate(Residuals_acceptable = if_else(
-    Ljung_Box_acceptable == "Yes" & Residual_ACF_acceptable == "Yes", "Yes", "No"
-  )) %>%
   arrange(desc(Residuals_acceptable == "Yes"), Validation_RMSE)
 write_csv(candidate_results, "output/member_D_candidate_results.csv")
 print(candidate_results)
@@ -63,17 +68,15 @@ checkresiduals(fit_model, lag = 24)
 dev.off()
 
 accuracy_D <- metrics(test$index, as.numeric(fit$mean), train$index) %>%
-  bind_cols(
-    ljung_box_diagnostic(fit_model, fitdf = length(coef(fit_model))),
-    residual_acf_diagnostic(fit_model)
-  ) %>%
+  bind_cols(residual_diagnostics(fit_model, fitdf = length(coef(fit_model)))) %>%
   mutate(
-    Residuals_acceptable = if_else(
-      Ljung_Box_acceptable == "Yes" & Residual_ACF_acceptable == "Yes", "Yes", "No"
-    ),
     member = "Tan Wei Ching",
-    model = recommended_name
+    model_family = "Time-series regression",
+    selected_variant = recommended_name,
+    model_specification = recommended_name,
+    model = model_specification
   ) %>%
-  select(member, model, everything())
+  select(member, model_family, selected_variant, model_specification, model,
+         MAE, RMSE, MAPE, MASE, everything())
 write_csv(accuracy_D, "output/member_D_accuracy.csv")
 print(accuracy_D)

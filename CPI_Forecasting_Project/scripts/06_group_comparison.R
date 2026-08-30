@@ -1,15 +1,58 @@
-# 06_group_comparison.R - final comparison of acceptable model families.
+# 06_group_comparison.R - select the final model from diagnostically eligible models.
 
 source("scripts/00_setup.R")
 required_files <- paste0("output/member_", LETTERS[1:4], "_accuracy.csv")
 if (!all(file.exists(required_files))) stop("Run scripts 02-05 before running the group comparison.")
 
-all_model_results <- bind_rows(lapply(required_files, read_csv, show_col_types = FALSE)) %>% arrange(RMSE)
-write_csv(all_model_results, "output/model_diagnostics_summary.csv")
+all_model_results <- bind_rows(lapply(required_files, read_csv, show_col_types = FALSE))
+required_columns <- c("member", "model_family", "selected_variant", "model_specification",
+                      "RMSE", "Residuals_acceptable", "Diagnostic_note")
+missing_columns <- setdiff(required_columns, names(all_model_results))
+if (length(missing_columns) > 0) {
+  stop("Member accuracy outputs are outdated. Re-run scripts 02-05. Missing columns: ",
+       paste(missing_columns, collapse = ", "))
+}
 
-comparison <- all_model_results %>% arrange(RMSE)
-write_csv(comparison, "output/model_comparison_summary.csv")
-print(comparison)
+diagnostics_summary <- all_model_results %>%
+  mutate(Final_eligible = if_else(Residuals_acceptable == "Yes", "Yes", "No")) %>%
+  arrange(RMSE)
+write_csv(diagnostics_summary, "output/model_diagnostics_summary.csv")
 
-plot <- ggplot(comparison, aes(reorder(model, RMSE), RMSE, fill = member)) + geom_col(show.legend = FALSE) + coord_flip() + labs(title = "Group Forecast Comparison: Lower RMSE Is Better", subtitle = "Models with failed residual diagnostics remain flagged in the summary table", x = "Model", y = "RMSE (CPI index points)") + theme_minimal()
+# This is the accuracy ranking of every tested model. It is not the final
+# selection ranking because low error cannot override failed diagnostics.
+accuracy_ranking <- diagnostics_summary %>% arrange(RMSE)
+write_csv(accuracy_ranking, "output/model_comparison_summary.csv")
+
+eligible_ranking <- diagnostics_summary %>%
+  filter(Residuals_acceptable == "Yes") %>%
+  arrange(RMSE)
+write_csv(eligible_ranking, "output/eligible_model_comparison.csv")
+
+if (nrow(eligible_ranking) == 0) {
+  stop(
+    "No diagnostically acceptable model is available. No final model or future forecast may be selected. ",
+    "Review the member diagnostic notes and test additional variants."
+  )
+}
+
+selected_final_model <- eligible_ranking %>% slice(1)
+write_csv(selected_final_model, "output/selected_final_model.csv")
+
+print(accuracy_ranking %>% select(member, model_specification, RMSE, Residuals_acceptable, Final_eligible))
+cat("\nSelected final model:\n")
+print(selected_final_model %>% select(member, model_family, model_specification, RMSE, Diagnostic_note))
+
+plot <- ggplot(
+  accuracy_ranking,
+  aes(reorder(model_specification, RMSE), RMSE, fill = Final_eligible)
+) +
+  geom_col() +
+  coord_flip() +
+  scale_fill_manual(values = c("Yes" = "#1b9e77", "No" = "#d95f02")) +
+  labs(
+    title = "Group Forecast Comparison: Holdout RMSE",
+    subtitle = "Green models are eligible for final selection; orange models failed residual diagnostics",
+    x = "Model specification", y = "RMSE (CPI index points)", fill = "Final eligible"
+  ) +
+  theme_minimal()
 save_plot(plot, "output/model_comparison_rmse.png")

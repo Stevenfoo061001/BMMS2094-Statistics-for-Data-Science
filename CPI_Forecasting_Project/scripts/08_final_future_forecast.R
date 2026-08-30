@@ -1,16 +1,23 @@
-# 08_final_future_forecast.R - refit the selected winner and forecast future CPI.
+# 08_final_future_forecast.R - refit the selected eligible model and forecast future CPI.
 
 source("scripts/00_setup.R")
 if (!file.exists("data/overall_cpi_prepared.rds")) source("scripts/01_data_prep.R")
-if (!file.exists("output/model_comparison_summary.csv")) {
-  stop("Run scripts 02-06 before creating the final future forecast.")
+if (!file.exists("output/selected_final_model.csv")) {
+  stop("Run scripts 02-06 first. A future forecast requires output/selected_final_model.csv from the eligible-model selection.")
 }
 
 prepared <- readRDS("data/overall_cpi_prepared.rds")
-winner <- read_csv("output/model_comparison_summary.csv", show_col_types = FALSE) %>% slice_min(RMSE, n = 1, with_ties = FALSE)
+winner <- read_csv("output/selected_final_model.csv", show_col_types = FALSE)
+if (nrow(winner) != 1 || winner$Residuals_acceptable[[1]] != "Yes") {
+  stop("selected_final_model.csv must contain exactly one diagnostically acceptable model.")
+}
+
 all_ts <- ts(prepared$index, start = c(prepared$year[1], prepared$month_number[1]), frequency = seasonal_period)
 
-fit_final_model <- function(member, model, series, horizon) {
+fit_final_model <- function(winner, series, horizon) {
+  member <- winner$member[[1]]
+  variant <- winner$selected_variant[[1]]
+
   if (member == "Huxley") return(snaive(series, h = horizon))
 
   if (member == "Ooi Mei Yi") {
@@ -20,55 +27,67 @@ fit_final_model <- function(member, model, series, horizon) {
       "Holt-Winters additive" = function() hw(series, seasonal = "additive", damped = FALSE, h = horizon),
       "Damped Holt-Winters additive" = function() hw(series, seasonal = "additive", damped = TRUE, h = horizon)
     )
-    return(candidates[[model]]())
+    if (!variant %in% names(candidates)) stop("Unrecognised exponential-smoothing variant: ", variant)
+    return(candidates[[variant]]())
   }
 
   if (member == "Steven") {
-    candidates <- list(
-      "SARIMA(1,1,1)(1,1,1)[12]" = function() forecast::Arima(series, order = c(1, 1, 1), seasonal = list(order = c(1, 1, 1), period = 12)),
-      "SARIMA(0,1,1)(0,1,1)[12]" = function() forecast::Arima(series, order = c(0, 1, 1), seasonal = list(order = c(0, 1, 1), period = 12)),
-      "SARIMA(1,1,0)(1,1,0)[12]" = function() forecast::Arima(series, order = c(1, 1, 0), seasonal = list(order = c(1, 1, 0), period = 12)),
-      "SARIMA(1,1,1)(1,1,0)[12]" = function() forecast::Arima(series, order = c(1, 1, 1), seasonal = list(order = c(1, 1, 0), period = 12)),
-      "SARIMA(1,1,0)(0,1,1)[12]" = function() forecast::Arima(series, order = c(1, 1, 0), seasonal = list(order = c(0, 1, 1), period = 12)),
-      "auto.arima selected model" = function() forecast::auto.arima(series, seasonal = TRUE, stepwise = FALSE, approximation = FALSE)
+    required_order_fields <- c("p", "d", "q", "P", "D", "Q", "seasonal_period", "includes_drift", "includes_mean")
+    if (!all(required_order_fields %in% names(winner))) {
+      stop("Steven's selected model is missing its saved ARIMA order; re-run scripts 04 and 06.")
+    }
+    order <- as.integer(unlist(winner[1, c("p", "d", "q")]))
+    seasonal_order <- as.integer(unlist(winner[1, c("P", "D", "Q")]))
+    period <- as.integer(winner$seasonal_period[[1]])
+    include_drift <- identical(winner$includes_drift[[1]], "Yes")
+    include_mean <- identical(winner$includes_mean[[1]], "Yes")
+    refitted <- forecast::Arima(
+      series,
+      order = order,
+      seasonal = list(order = seasonal_order, period = period),
+      include.drift = include_drift,
+      include.mean = include_mean
     )
-    return(forecast(candidates[[model]](), h = horizon))
+    return(forecast::forecast(refitted, h = horizon))
   }
 
   if (member == "Tan Wei Ching") {
     candidates <- list(
-      "Trend only" = function() tslm(series ~ trend),
-      "Trend + monthly dummies" = function() tslm(series ~ trend + season),
-      "Quadratic trend + monthly dummies" = function() tslm(series ~ trend + I(trend^2) + season)
+      "Trend only" = function() forecast(tslm(series ~ trend), h = horizon),
+      "Trend + monthly dummies" = function() forecast(tslm(series ~ trend + season), h = horizon),
+      "Quadratic trend + monthly dummies" = function() forecast(tslm(series ~ trend + I(trend^2) + season), h = horizon)
     )
-    return(forecast(candidates[[model]](), h = horizon))
+    if (!variant %in% names(candidates)) stop("Unrecognised time-series regression variant: ", variant)
+    return(candidates[[variant]]())
   }
 
   stop("The selected model is not recognised by the final forecasting script.")
 }
 
-final_forecast <- fit_final_model(winner$member, winner$model, all_ts, future_h)
+final_forecast <- fit_final_model(winner, all_ts, future_h)
 future_dates <- seq(max(prepared$date), by = "month", length.out = future_h + 1)[-1]
 future_output <- tibble(
   date = future_dates,
-  forecast_cpi = as.numeric(final_forecast$mean),
+  point_forecast = as.numeric(final_forecast$mean),
   lower_80 = as.numeric(final_forecast$lower[, "80%"]),
   upper_80 = as.numeric(final_forecast$upper[, "80%"]),
   lower_95 = as.numeric(final_forecast$lower[, "95%"]),
   upper_95 = as.numeric(final_forecast$upper[, "95%"]),
-  selected_model = winner$model
+  selected_member = winner$member[[1]],
+  model_family = winner$model_family[[1]],
+  model_specification = winner$model_specification[[1]],
+  forecast_note = "Forecast values are estimates, not guaranteed future outcomes."
 )
 write_csv(future_output, "output/future_cpi_forecast.csv")
 
 final_plot <- autoplot(final_forecast) +
   labs(
-    title = paste("Future CPI Forecast:", winner$model),
-    subtitle = paste("Model refitted on all observed data through", format(max(prepared$date), "%B %Y")),
-    x = "Year",
-    y = "CPI index"
+    title = paste("Future CPI Forecast:", winner$model_specification[[1]]),
+    subtitle = paste("Selected eligible model refitted on observations through", format(max(prepared$date), "%B %Y")),
+    x = "Year", y = "CPI index"
   ) +
   theme_minimal()
 save_plot(final_plot, "output/final_future_cpi_forecast.png")
 
-print(winner)
+print(winner %>% select(member, model_family, model_specification, RMSE, Diagnostic_note))
 print(future_output)

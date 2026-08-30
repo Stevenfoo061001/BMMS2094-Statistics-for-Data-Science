@@ -13,47 +13,78 @@ selection_train_ts <- ts(selection_train$index, start = c(2010, 1), frequency = 
 test_ts <- ts(test$index, start = c(2025, 1), frequency = 12)
 out <- "output/plots/Member_C_sarima"
 
+arima_metadata <- function(model, model_key, selected_variant) {
+  selected_order <- forecast::arimaorder(model)
+  get_order <- function(name, default = 0L) {
+    if (name %in% names(selected_order)) as.integer(selected_order[[name]]) else default
+  }
+  p <- get_order("p"); d <- get_order("d"); q <- get_order("q")
+  P <- get_order("P"); D <- get_order("D"); Q <- get_order("Q")
+  m <- get_order("m", seasonal_period)
+  coefficient_names <- names(coef(model))
+  includes_drift <- "drift" %in% coefficient_names
+  includes_mean <- any(c("intercept", "mean") %in% coefficient_names)
+  suffix <- if (includes_drift) " with drift" else if (includes_mean) " with mean/intercept" else ""
+
+  tibble(
+    model_key = model_key,
+    selected_variant = selected_variant,
+    model_specification = paste0("ARIMA(", p, ",", d, ",", q, ")(", P, ",", D, ",", Q, ")[", m, "]", suffix),
+    p = p, d = d, q = q, P = P, D = D, Q = Q,
+    seasonal_period = m,
+    includes_drift = if_else(includes_drift, "Yes", "No"),
+    includes_mean = if_else(includes_mean, "Yes", "No")
+  )
+}
+
 # Fit a model safely. A failed or non-convergent candidate is recorded as NA.
-evaluate_candidate <- function(name, model_function) {
+evaluate_candidate <- function(model_key, selected_variant, model_function) {
   tryCatch({
     model <- model_function(selection_train_ts)
     forecast_values <- as.numeric(forecast::forecast(model, h = validation_h)$mean)
     model_aicc <- tryCatch(as.numeric(model$aicc), error = function(error) NA_real_)
-    ljung_box <- tryCatch(
-      ljung_box_diagnostic(model, fitdf = length(coef(model))),
-      error = function(error) tibble(Ljung_Box_lag = NA_real_, Ljung_Box_p_value = NA_real_, Ljung_Box_acceptable = "Unavailable")
-    )
-    residual_acf <- tryCatch(
-      residual_acf_diagnostic(model),
-      error = function(error) tibble(Residual_ACF_acceptable = "Unavailable", Residual_ACF_spike_lags = conditionMessage(error))
-    )
     bind_cols(
-      tibble(model = name, AICc = model_aicc),
-      ljung_box,
-      residual_acf,
+      tibble(AICc = model_aicc),
+      arima_metadata(model, model_key, selected_variant),
+      residual_diagnostics(model, fitdf = length(coef(model))),
       metrics(validation$index, forecast_values, selection_train$index) %>%
         rename_with(~ paste0("Validation_", .x))
     )
   }, error = function(error) {
-    tibble(model = name, AICc = NA_real_, Ljung_Box_lag = NA_real_, Ljung_Box_p_value = NA_real_, Ljung_Box_acceptable = NA_character_, Residual_ACF_acceptable = NA_character_, Residual_ACF_spike_lags = NA_character_, Validation_MAE = NA_real_, Validation_RMSE = NA_real_, Validation_MAPE = NA_real_, Validation_MASE = NA_real_, Error_Message = conditionMessage(error))
+    tibble(model_key = model_key, selected_variant = selected_variant,
+           model_specification = NA_character_, p = NA_integer_, d = NA_integer_, q = NA_integer_,
+           P = NA_integer_, D = NA_integer_, Q = NA_integer_, seasonal_period = NA_integer_,
+           includes_drift = NA_character_, includes_mean = NA_character_, AICc = NA_real_,
+           Ljung_Box_lag = NA_integer_, Ljung_Box_p_value = NA_real_, Ljung_Box_acceptable = "Unavailable",
+           Ljung_Box_decision = "Unavailable", Residual_ACF_spike_count = NA_integer_,
+           Residual_ACF_spike_lags = "Unavailable", Residual_ACF_has_consecutive_spikes = "Unavailable",
+           Residual_ACF_pattern = "Unavailable", Residual_ACF_acceptable = "Unavailable",
+           Residuals_acceptable = "No", Diagnostic_note = "Candidate model failed to fit.",
+           Validation_MAE = NA_real_, Validation_RMSE = NA_real_, Validation_MAPE = NA_real_,
+           Validation_MASE = NA_real_, Error_Message = conditionMessage(error))
   })
 }
 
 # Candidates are selected with internal validation, preserving the final test
 # period for one unbiased evaluation after the selected model is refitted.
+candidate_labels <- c(
+  sarima_111_111 = "SARIMA(1,1,1)(1,1,1)[12]",
+  sarima_011_011 = "SARIMA(0,1,1)(0,1,1)[12]",
+  sarima_110_110 = "SARIMA(1,1,0)(1,1,0)[12]",
+  sarima_111_110 = "SARIMA(1,1,1)(1,1,0)[12]",
+  sarima_110_011 = "SARIMA(1,1,0)(0,1,1)[12]",
+  auto_arima = "Automatic ARIMA selection"
+)
 candidates <- list(
-  "SARIMA(1,1,1)(1,1,1)[12]" = function(series) forecast::Arima(series, order = c(1, 1, 1), seasonal = list(order = c(1, 1, 1), period = 12)),
-  "SARIMA(0,1,1)(0,1,1)[12]" = function(series) forecast::Arima(series, order = c(0, 1, 1), seasonal = list(order = c(0, 1, 1), period = 12)),
-  "SARIMA(1,1,0)(1,1,0)[12]" = function(series) forecast::Arima(series, order = c(1, 1, 0), seasonal = list(order = c(1, 1, 0), period = 12)),
-  "SARIMA(1,1,1)(1,1,0)[12]" = function(series) forecast::Arima(series, order = c(1, 1, 1), seasonal = list(order = c(1, 1, 0), period = 12)),
-  "SARIMA(1,1,0)(0,1,1)[12]" = function(series) forecast::Arima(series, order = c(1, 1, 0), seasonal = list(order = c(0, 1, 1), period = 12)),
-  "auto.arima selected model" = function(series) forecast::auto.arima(series, seasonal = TRUE, stepwise = FALSE, approximation = FALSE)
+  sarima_111_111 = function(series) forecast::Arima(series, order = c(1, 1, 1), seasonal = list(order = c(1, 1, 1), period = 12)),
+  sarima_011_011 = function(series) forecast::Arima(series, order = c(0, 1, 1), seasonal = list(order = c(0, 1, 1), period = 12)),
+  sarima_110_110 = function(series) forecast::Arima(series, order = c(1, 1, 0), seasonal = list(order = c(1, 1, 0), period = 12)),
+  sarima_111_110 = function(series) forecast::Arima(series, order = c(1, 1, 1), seasonal = list(order = c(1, 1, 0), period = 12)),
+  sarima_110_011 = function(series) forecast::Arima(series, order = c(1, 1, 0), seasonal = list(order = c(0, 1, 1), period = 12)),
+  auto_arima = function(series) forecast::auto.arima(series, seasonal = TRUE, stepwise = FALSE, approximation = FALSE)
 )
 
-candidate_results <- bind_rows(Map(evaluate_candidate, names(candidates), candidates)) %>%
-  mutate(Residuals_acceptable = if_else(
-    Ljung_Box_acceptable == "Yes" & Residual_ACF_acceptable == "Yes", "Yes", "No"
-  )) %>%
+candidate_results <- bind_rows(Map(evaluate_candidate, names(candidates), unname(candidate_labels), candidates)) %>%
   arrange(desc(Residuals_acceptable == "Yes"), Validation_RMSE)
 
 write_csv(candidate_results, "output/steven_sarima_candidate_results.csv")
@@ -71,41 +102,35 @@ if (all(is.na(candidate_results$Validation_RMSE))) {
 # Ljung-Box issue first, then report that further refinement is required.
 acceptable_results <- candidate_results %>% filter(Residuals_acceptable == "Yes")
 if (nrow(acceptable_results) > 0) {
-  recommended_name <- acceptable_results$model[which.min(acceptable_results$Validation_RMSE)]
+  recommended_key <- acceptable_results$model_key[which.min(acceptable_results$Validation_RMSE)]
   recommendation_note <- "Recommended: lowest-RMSE candidate passing Ljung-Box and residual ACF checks."
 } else {
-  recommended_name <- candidate_results$model[which.min(candidate_results$Validation_RMSE)]
+  recommended_key <- candidate_results$model_key[which.min(candidate_results$Validation_RMSE)]
   recommendation_note <- "Fallback: no candidate passed both residual checks; selected the lowest validation-RMSE candidate."
 }
 
-recommended_model <- candidates[[recommended_name]](train_ts)
+recommended_name <- candidate_labels[[recommended_key]]
+recommended_model <- candidates[[recommended_key]](train_ts)
 recommended_forecast <- forecast::forecast(recommended_model, h = h)
-cat("\n", recommendation_note, "\nSelected candidate:", recommended_name, "\n", sep = "")
+selected_metadata <- arima_metadata(recommended_model, recommended_key, recommended_name)
+cat("\n", recommendation_note, "\nSelected candidate:", selected_metadata$model_specification, "\n", sep = "")
 
 # This becomes Steven's selected SARIMA result for the group comparison.
 accuracy_C <- metrics(test$index, as.numeric(recommended_forecast$mean), train$index) %>%
-  bind_cols(
-    tryCatch(
-      ljung_box_diagnostic(recommended_model, fitdf = length(coef(recommended_model))),
-      error = function(error) tibble(Ljung_Box_lag = NA_real_, Ljung_Box_p_value = NA_real_, Ljung_Box_acceptable = "Unavailable")
-    ),
-    tryCatch(
-      residual_acf_diagnostic(recommended_model),
-      error = function(error) tibble(Residual_ACF_acceptable = "Unavailable", Residual_ACF_spike_lags = conditionMessage(error))
-    )
-  ) %>%
-  mutate(
-    Residuals_acceptable = if_else(
-      Ljung_Box_acceptable == "Yes" & Residual_ACF_acceptable == "Yes", "Yes", "No"
-    ),
-    member = "Steven",
-    model = recommended_name
-  ) %>%
-  select(member, model, everything())
+  bind_cols(selected_metadata, residual_diagnostics(recommended_model, fitdf = length(coef(recommended_model)))) %>%
+  mutate(member = "Steven", model_family = "ARIMA/SARIMA", model = model_specification) %>%
+  select(member, model_family, selected_variant, model_specification, model_key,
+         p, d, q, P, D, Q, seasonal_period, includes_drift, includes_mean,
+         model, MAE, RMSE, MAPE, MASE, everything())
 write_csv(accuracy_C, "output/member_C_accuracy.csv")
 print(accuracy_C)
+write_csv(
+  accuracy_C %>% select(member, model_family, selected_variant, model_specification, model_key,
+                         p, d, q, P, D, Q, seasonal_period, includes_drift, includes_mean),
+  "output/selected_model_specification.csv"
+)
 
-comparison_plot <- ggplot(candidate_results, aes(reorder(model, Validation_RMSE), Validation_RMSE, fill = Residuals_acceptable)) +
+comparison_plot <- ggplot(candidate_results, aes(reorder(model_specification, Validation_RMSE), Validation_RMSE, fill = Residuals_acceptable)) +
   geom_col() + coord_flip() +
   scale_fill_manual(values = c("Yes" = "#1b9e77", "No" = "#d95f02")) +
   labs(title = "Steven: SARIMA Candidate Comparison", subtitle = "Green = Ljung-Box and residual ACF checks passed", x = "SARIMA candidate", y = "Validation RMSE", fill = "Residuals acceptable") +
@@ -114,7 +139,7 @@ save_plot(comparison_plot, file.path(out, "Member_C_06_candidate_comparison.png"
 
 save_plot(
   autoplot(recommended_forecast) + autolayer(test_ts, series = "Actual test CPI") +
-    labs(title = paste("Steven: Recommended", recommended_name, "Forecast"), x = "Year", y = "CPI index") + theme_minimal(),
+    labs(title = paste("Steven: Recommended", selected_metadata$model_specification, "Forecast"), x = "Year", y = "CPI index") + theme_minimal(),
   file.path(out, "Member_C_07_recommended_forecast.png")
 )
 
