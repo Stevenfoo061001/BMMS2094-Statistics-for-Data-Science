@@ -66,7 +66,7 @@ evaluate_candidate <- function(model_key, selected_variant, model_function) {
       tibble(AICc = model_aicc),
       arima_metadata(model, model_key, selected_variant),
       residual_diagnostics(model, fitdf = length(coef(model))),
-      overfitting_diagnostic(validation_forecast, validation) %>%
+      overfitting_diagnostic(validation_forecast, validation$index) %>%
         rename_with(~ paste0("Validation_", .x)),
       metrics(validation$index, forecast_values, selection_train$index) %>%
         rename_with(~ paste0("Validation_", .x))
