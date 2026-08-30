@@ -24,6 +24,9 @@ seasonal_period <- 12
 # A small number of isolated residual-ACF spikes can occur by chance. Spikes
 # are rejected only when they are numerous or form a consecutive pattern.
 max_isolated_acf_spikes <- 3
+# A large gap between training and unseen-test error can indicate overfitting.
+# This is a warning threshold for interpretation, not a final-selection rule.
+overfit_rmse_ratio_warning <- 1.5
 
 save_plot <- function(plot_object, filename, width = 11, height = 5) {
   dir.create(dirname(filename), recursive = TRUE, showWarnings = FALSE)
@@ -154,4 +157,38 @@ residual_diagnostics <- function(model, fitdf = 0) {
         )
       )
     )
+}
+
+overfitting_diagnostic <- function(forecast_object, actual_values) {
+  accuracy_values <- tryCatch(
+    forecast::accuracy(forecast_object, actual_values),
+    error = function(error) NULL
+  )
+
+  if (is.null(accuracy_values) ||
+      !all(c("Training set", "Test set") %in% rownames(accuracy_values))) {
+    return(tibble(
+      Training_RMSE = NA_real_, Test_RMSE = NA_real_, RMSE_ratio = NA_real_,
+      Training_MAPE = NA_real_, Test_MAPE = NA_real_,
+      Overfitting_assessment = "Unavailable"
+    ))
+  }
+
+  training_rmse <- as.numeric(accuracy_values["Training set", "RMSE"])
+  test_rmse <- as.numeric(accuracy_values["Test set", "RMSE"])
+  training_mape <- as.numeric(accuracy_values["Training set", "MAPE"])
+  test_mape <- as.numeric(accuracy_values["Test set", "MAPE"])
+  rmse_ratio <- if_else(is.finite(training_rmse) && training_rmse > 0,
+                        test_rmse / training_rmse, NA_real_)
+  assessment <- case_when(
+    is.na(rmse_ratio) ~ "Unavailable",
+    rmse_ratio >= overfit_rmse_ratio_warning ~ "Possible overfitting: test RMSE is substantially higher than training RMSE",
+    TRUE ~ "No strong overfitting warning from the training-versus-test RMSE comparison"
+  )
+
+  tibble(
+    Training_RMSE = training_rmse, Test_RMSE = test_rmse, RMSE_ratio = rmse_ratio,
+    Training_MAPE = training_mape, Test_MAPE = test_mape,
+    Overfitting_assessment = assessment
+  )
 }

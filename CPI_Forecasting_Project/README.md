@@ -36,6 +36,8 @@ Members select a variant within their assigned family using only the internal va
 
 A model is eligible for final selection only when its Ljung–Box p-value is above 0.05 and its residual ACF is acceptable. Up to three isolated significant ACF spikes are allowed; consecutive or more numerous spikes are not. The final model is the eligible model with the lowest **final-holdout RMSE**—never the lowest-RMSE model overall without diagnostics.
 
+Each member accuracy output also compares training and final-holdout RMSE/MAPE. A test-to-training RMSE ratio of 1.5 or above is flagged as a possible overfitting warning; it is interpreted alongside holdout accuracy and residual diagnostics rather than used as an automatic rejection rule.
+
 ## Run order in Posit Cloud
 
 Open `project.Rproj`, then run:

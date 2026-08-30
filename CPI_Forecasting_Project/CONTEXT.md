@@ -19,6 +19,7 @@ Forecast Malaysia's monthly overall Consumer Price Index for low-income househol
 - Accuracy: MASE, RMSE, MAE, and MAPE; lower is better.
 - The Ljung–Box p-value must be above 0.05 for residuals to be acceptable.
 - Up to three isolated residual-ACF spikes are acceptable. Consecutive spikes or more than three spikes are unacceptable.
+- Training-versus-final-test RMSE/MAPE is recorded as an overfitting check. A test-to-training RMSE ratio of 1.5 or above is a warning for interpretation, not an automatic rejection rule.
 - The final model is the lowest-final-holdout-RMSE model among diagnostically acceptable models. A lower-RMSE but diagnostically unacceptable model is ineligible.
 
 ## Group allocation

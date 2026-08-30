@@ -69,7 +69,7 @@ checkresiduals(fit, lag = 24)
 dev.off()
 
 accuracy_B <- metrics(test$index, as.numeric(fit$mean), train$index) %>%
-  bind_cols(residual_diagnostics(fit, fitdf = 0)) %>%
+  bind_cols(residual_diagnostics(fit, fitdf = 0), overfitting_diagnostic(fit, test_ts)) %>%
   mutate(
     member = "Ooi Mei Yi",
     model_family = "Exponential smoothing",

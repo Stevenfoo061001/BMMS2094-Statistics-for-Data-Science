@@ -15,7 +15,7 @@ png(file.path(out, "Member_A_04_residuals.png"), width = 3300, height = 2400, re
 checkresiduals(fit, lag = 24)
 dev.off()
 accuracy_A <- metrics(test$index, as.numeric(fit$mean), train$index) %>%
-  bind_cols(residual_diagnostics(fit, fitdf = 0)) %>%
+  bind_cols(residual_diagnostics(fit, fitdf = 0), overfitting_diagnostic(fit, test_ts)) %>%
   mutate(
     member = "Huxley",
     model_family = "Seasonal Naive",

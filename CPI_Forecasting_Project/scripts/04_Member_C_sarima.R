@@ -135,7 +135,11 @@ cat("\n", recommendation_note, "\nSelected candidate:", selected_metadata$model_
 
 # This becomes Steven's selected SARIMA result for the group comparison.
 accuracy_C <- metrics(test$index, as.numeric(recommended_forecast$mean), train$index) %>%
-  bind_cols(selected_metadata, residual_diagnostics(recommended_model, fitdf = length(coef(recommended_model)))) %>%
+  bind_cols(
+    selected_metadata,
+    residual_diagnostics(recommended_model, fitdf = length(coef(recommended_model))),
+    overfitting_diagnostic(recommended_forecast, test_ts)
+  ) %>%
   mutate(member = "Steven", model_family = "ARIMA/SARIMA", model = model_specification) %>%
   select(member, model_family, selected_variant, model_specification, model_key,
          p, d, q, P, D, Q, seasonal_period, includes_drift, includes_mean,

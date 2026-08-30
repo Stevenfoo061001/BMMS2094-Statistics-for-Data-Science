@@ -68,7 +68,10 @@ checkresiduals(fit_model, lag = 24)
 dev.off()
 
 accuracy_D <- metrics(test$index, as.numeric(fit$mean), train$index) %>%
-  bind_cols(residual_diagnostics(fit_model, fitdf = length(coef(fit_model)))) %>%
+  bind_cols(
+    residual_diagnostics(fit_model, fitdf = length(coef(fit_model))),
+    overfitting_diagnostic(fit, test_ts)
+  ) %>%
   mutate(
     member = "Tan Wei Ching",
     model_family = "Time-series regression",
