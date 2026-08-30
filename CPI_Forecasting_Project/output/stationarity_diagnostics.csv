@@ -1,4 +1,0 @@
-diagnostic,null_hypothesis,statistic,p_value,conclusion
-ADF test,Series has a unit root (non-stationary),-1.8849916540028753,0.6242816895470866,Do not reject unit root
-KPSS test,Series is stationary,3.5626473428062866,0.01,Reject stationarity
-Seasonal ACF at lag 12 (first difference),No annual autocorrelation after first differencing,0.09269194693716706,NA,No clear annual seasonal correlation

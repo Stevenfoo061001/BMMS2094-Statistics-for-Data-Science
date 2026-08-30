@@ -13,6 +13,24 @@ selection_train_ts <- ts(selection_train$index, start = c(2010, 1), frequency = 
 test_ts <- ts(test$index, start = c(2025, 1), frequency = 12)
 out <- "output/plots/Member_C_sarima"
 
+# Standard Member C plot sequence, matching the familiar naming convention
+# used by the archived SARIMA work and the other members' output folders.
+first_difference <- diff(train_ts)
+save_plot(
+  autoplot(train_ts) +
+    labs(title = "Steven: Overall CPI Training Series", x = "Year", y = "CPI index") +
+    theme_minimal(),
+  file.path(out, "Member_C_01_autoplot.png")
+)
+
+png(file.path(out, "Member_C_02_acf.png"), width = 3300, height = 1500, res = 300)
+Acf(first_difference, lag.max = 36, main = "Steven: First-Differenced CPI ACF")
+dev.off()
+
+png(file.path(out, "Member_C_03_pacf.png"), width = 3300, height = 1500, res = 300)
+Pacf(first_difference, lag.max = 36, main = "Steven: First-Differenced CPI PACF")
+dev.off()
+
 arima_metadata <- function(model, model_key, selected_variant) {
   selected_order <- forecast::arimaorder(model)
   get_order <- function(name, default = 0L) {
@@ -87,14 +105,14 @@ candidates <- list(
 candidate_results <- bind_rows(Map(evaluate_candidate, names(candidates), unname(candidate_labels), candidates)) %>%
   arrange(desc(Residuals_acceptable == "Yes"), Validation_RMSE)
 
-write_csv(candidate_results, "output/steven_sarima_candidate_results.csv")
+write_csv(candidate_results, "output/member_C_candidate_results.csv")
 print(candidate_results)
 
 if (all(is.na(candidate_results$Validation_RMSE))) {
   stop(
     "All SARIMA candidates failed to fit. First error: ",
     candidate_results$Error_Message[1],
-    ". See output/steven_sarima_candidate_results.csv for every error."
+    ". See output/member_C_candidate_results.csv for every error."
   )
 }
 
@@ -127,7 +145,7 @@ print(accuracy_C)
 write_csv(
   accuracy_C %>% select(member, model_family, selected_variant, model_specification, model_key,
                          p, d, q, P, D, Q, seasonal_period, includes_drift, includes_mean),
-  "output/selected_model_specification.csv"
+  "output/member_C_selected_model_specification.csv"
 )
 
 comparison_plot <- ggplot(candidate_results, aes(reorder(model_specification, Validation_RMSE), Validation_RMSE, fill = Residuals_acceptable)) +
@@ -137,11 +155,16 @@ comparison_plot <- ggplot(candidate_results, aes(reorder(model_specification, Va
   theme_minimal()
 save_plot(comparison_plot, file.path(out, "Member_C_06_candidate_comparison.png"), width = 12, height = 6)
 
-save_plot(
-  autoplot(recommended_forecast) + autolayer(test_ts, series = "Actual test CPI") +
-    labs(title = paste("Steven: Recommended", selected_metadata$model_specification, "Forecast"), x = "Year", y = "CPI index") + theme_minimal(),
-  file.path(out, "Member_C_07_recommended_forecast.png")
-)
+forecast_plot <- autoplot(recommended_forecast) +
+  autolayer(test_ts, series = "Actual test CPI") +
+  labs(title = paste("Steven: Recommended", selected_metadata$model_specification, "Forecast"), x = "Year", y = "CPI index") +
+  theme_minimal()
+save_plot(forecast_plot, file.path(out, "Member_C_04_forecast.png"))
+save_plot(forecast_plot, file.path(out, "Member_C_07_recommended_forecast.png"))
+
+png(file.path(out, "Member_C_05_residuals.png"), width = 3300, height = 2400, res = 300)
+checkresiduals(recommended_model, lag = 24)
+dev.off()
 
 png(file.path(out, "Member_C_08_recommended_residuals.png"), width = 3300, height = 2400, res = 300)
 checkresiduals(recommended_model, lag = 24)
