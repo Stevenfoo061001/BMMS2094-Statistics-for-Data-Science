@@ -52,12 +52,15 @@ source("scripts/06_group_comparison.R")
 source("scripts/08_final_future_forecast.R")
 ```
 
+For optional models outside the core syllabus, run `source("scripts/07_advanced_tbats_nnetar.R")`. It tests TBATS and NNETAR separately and does not replace or alter the core four-model group comparison.
+
 The first script loads/install packages through `00_setup.R`. Script 06 stops clearly if no model is diagnostically eligible; in that case, do not run script 08 until additional variants have been tested.
 
 ## Main generated files
 
 - `member_A_accuracy.csv` through `member_D_accuracy.csv`: selected variant, accuracy, full residual diagnostics, and factual diagnostic note for each member.
 - `member_C_candidate_results.csv` and `member_C_selected_model_specification.csv`: Steven's tested ARIMA/SARIMA orders and the actual selected ARIMA specification.
+- `member_E_candidate_results.csv` and `member_E_accuracy.csv`: optional TBATS and NNETAR comparison, kept separate from the core group selection.
 - `model_diagnostics_summary.csv`: all models with diagnostics and eligibility.
 - `model_comparison_summary.csv`: accuracy ranking of all models.
 - `eligible_model_comparison.csv` and `selected_final_model.csv`: final-selection ranking and selected eligible model.
