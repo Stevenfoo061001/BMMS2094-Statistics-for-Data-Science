@@ -34,7 +34,7 @@ png(file.path(out, "Member_C_03_pacf.png"), width = 3300, height = 1500, res = 3
 Pacf(first_difference, lag.max = 36, main = "Steven: First-Differenced CPI PACF")
 dev.off()
 
-arima_metadata <- function(model, model_key, selected_variant) {
+arima_metadata <- function(model, model_key, selected_variant, fourier_k = 0L) {
   selected_order <- forecast::arimaorder(model)
   get_order <- function(name, default = 0L) {
     if (name %in% names(selected_order)) as.integer(selected_order[[name]]) else default
@@ -46,28 +46,31 @@ arima_metadata <- function(model, model_key, selected_variant) {
   includes_drift <- "drift" %in% coefficient_names
   includes_mean <- any(c("intercept", "mean") %in% coefficient_names)
   suffix <- if (includes_drift) " with drift" else if (includes_mean) " with mean/intercept" else ""
+  fourier_suffix <- if (fourier_k > 0) paste0(" + Fourier K=", fourier_k) else ""
 
   tibble(
     model_key = model_key,
     selected_variant = selected_variant,
-    model_specification = paste0("ARIMA(", p, ",", d, ",", q, ")(", P, ",", D, ",", Q, ")[", m, "]", suffix),
+    model_specification = paste0("ARIMA(", p, ",", d, ",", q, ")(", P, ",", D, ",", Q, ")[", m, "]", suffix, fourier_suffix),
     p = p, d = d, q = q, P = P, D = D, Q = Q,
     seasonal_period = m,
     includes_drift = if_else(includes_drift, "Yes", "No"),
-    includes_mean = if_else(includes_mean, "Yes", "No")
+    includes_mean = if_else(includes_mean, "Yes", "No"),
+    Fourier_K = as.integer(fourier_k)
   )
 }
 
 # Fit a model safely. A failed or non-convergent candidate is recorded as NA.
-evaluate_candidate <- function(model_key, selected_variant, model_function) {
+evaluate_candidate <- function(model_key, selected_variant, model_function, fourier_k = 0L) {
   tryCatch({
-    model <- model_function(selection_train_ts)
-    validation_forecast <- forecast::forecast(model, h = validation_h)
+    fitted_candidate <- model_function(selection_train_ts, validation_h)
+    model <- fitted_candidate$model
+    validation_forecast <- fitted_candidate$forecast
     forecast_values <- as.numeric(validation_forecast$mean)
     model_aicc <- tryCatch(as.numeric(model$aicc), error = function(error) NA_real_)
     bind_cols(
       tibble(AICc = model_aicc),
-      arima_metadata(model, model_key, selected_variant),
+      arima_metadata(model, model_key, selected_variant, fourier_k),
       residual_diagnostics(model, fitdf = length(coef(model))),
       overfitting_diagnostic(validation_forecast, validation_ts) %>%
         rename_with(~ paste0("Validation_", .x)),
@@ -77,7 +80,7 @@ evaluate_candidate <- function(model_key, selected_variant, model_function) {
   }, error = function(error) {
     tibble(model_key = model_key, selected_variant = selected_variant,
            model_specification = NA_character_, p = NA_integer_, d = NA_integer_, q = NA_integer_,
-           P = NA_integer_, D = NA_integer_, Q = NA_integer_, seasonal_period = NA_integer_,
+           P = NA_integer_, D = NA_integer_, Q = NA_integer_, seasonal_period = NA_integer_, Fourier_K = NA_integer_,
            includes_drift = NA_character_, includes_mean = NA_character_, AICc = NA_real_,
            Ljung_Box_lag = NA_integer_, Ljung_Box_p_value = NA_real_, Ljung_Box_acceptable = "Unavailable",
            Ljung_Box_decision = "Unavailable", Residual_ACF_spike_count = NA_integer_,
@@ -108,25 +111,60 @@ candidate_labels <- c(
   sarima_111_110 = "SARIMA(1,1,1)(1,1,0)[12]",
   sarima_110_011 = "SARIMA(1,1,0)(0,1,1)[12]",
   auto_arima = "Automatic ARIMA selection",
-  auto_arima_no_drift = "Automatic ARIMA selection without drift"
-)
-candidates <- list(
-  arima_011_no_drift = function(series) forecast::Arima(series, order = c(0, 1, 1), include.drift = FALSE),
-  arima_011_drift = function(series) forecast::Arima(series, order = c(0, 1, 1), include.drift = TRUE),
-  arima_111_no_drift = function(series) forecast::Arima(series, order = c(1, 1, 1), include.drift = FALSE),
-  arima_111_drift = function(series) forecast::Arima(series, order = c(1, 1, 1), include.drift = TRUE),
-  sarima_011_001_no_drift = function(series) forecast::Arima(series, order = c(0, 1, 1), seasonal = list(order = c(0, 0, 1), period = 12), include.drift = FALSE),
-  sarima_011_001_drift = function(series) forecast::Arima(series, order = c(0, 1, 1), seasonal = list(order = c(0, 0, 1), period = 12), include.drift = TRUE),
-  sarima_111_111 = function(series) forecast::Arima(series, order = c(1, 1, 1), seasonal = list(order = c(1, 1, 1), period = 12)),
-  sarima_011_011 = function(series) forecast::Arima(series, order = c(0, 1, 1), seasonal = list(order = c(0, 1, 1), period = 12)),
-  sarima_110_110 = function(series) forecast::Arima(series, order = c(1, 1, 0), seasonal = list(order = c(1, 1, 0), period = 12)),
-  sarima_111_110 = function(series) forecast::Arima(series, order = c(1, 1, 1), seasonal = list(order = c(1, 1, 0), period = 12)),
-  sarima_110_011 = function(series) forecast::Arima(series, order = c(1, 1, 0), seasonal = list(order = c(0, 1, 1), period = 12)),
-  auto_arima = function(series) forecast::auto.arima(series, seasonal = TRUE, stepwise = FALSE, approximation = FALSE),
-  auto_arima_no_drift = function(series) forecast::auto.arima(series, seasonal = TRUE, stepwise = FALSE, approximation = FALSE, allowdrift = FALSE)
+  auto_arima_no_drift = "Automatic ARIMA selection without drift",
+  arima_011_fourier_k1 = "ARIMA(0,1,1) with drift + Fourier K=1",
+  arima_011_fourier_k2 = "ARIMA(0,1,1) with drift + Fourier K=2",
+  auto_arima_fourier_k1 = "Automatic ARIMA + Fourier K=1"
 )
 
-candidate_results <- bind_rows(Map(evaluate_candidate, names(candidates), unname(candidate_labels), candidates)) %>%
+# Each candidate returns both the fitted model and its forecast. This lets the
+# Fourier candidates supply future Fourier terms correctly, without using any
+# values from the validation or final test periods.
+standard_arima_candidate <- function(fit_function) {
+  function(series, horizon) {
+    model <- fit_function(series)
+    list(model = model, forecast = forecast::forecast(model, h = horizon))
+  }
+}
+
+fourier_arima_candidate <- function(k, fit_function) {
+  function(series, horizon) {
+    training_fourier <- forecast::fourier(series, K = k)
+    model <- fit_function(series, training_fourier)
+    future_fourier <- forecast::fourier(series, K = k, h = horizon)
+    list(model = model, forecast = forecast::forecast(model, h = horizon, xreg = future_fourier))
+  }
+}
+
+candidates <- list(
+  arima_011_no_drift = standard_arima_candidate(function(series) forecast::Arima(series, order = c(0, 1, 1), include.drift = FALSE)),
+  arima_011_drift = standard_arima_candidate(function(series) forecast::Arima(series, order = c(0, 1, 1), include.drift = TRUE)),
+  arima_111_no_drift = standard_arima_candidate(function(series) forecast::Arima(series, order = c(1, 1, 1), include.drift = FALSE)),
+  arima_111_drift = standard_arima_candidate(function(series) forecast::Arima(series, order = c(1, 1, 1), include.drift = TRUE)),
+  sarima_011_001_no_drift = standard_arima_candidate(function(series) forecast::Arima(series, order = c(0, 1, 1), seasonal = list(order = c(0, 0, 1), period = 12), include.drift = FALSE)),
+  sarima_011_001_drift = standard_arima_candidate(function(series) forecast::Arima(series, order = c(0, 1, 1), seasonal = list(order = c(0, 0, 1), period = 12), include.drift = TRUE)),
+  sarima_111_111 = standard_arima_candidate(function(series) forecast::Arima(series, order = c(1, 1, 1), seasonal = list(order = c(1, 1, 1), period = 12))),
+  sarima_011_011 = standard_arima_candidate(function(series) forecast::Arima(series, order = c(0, 1, 1), seasonal = list(order = c(0, 1, 1), period = 12))),
+  sarima_110_110 = standard_arima_candidate(function(series) forecast::Arima(series, order = c(1, 1, 0), seasonal = list(order = c(1, 1, 0), period = 12))),
+  sarima_111_110 = standard_arima_candidate(function(series) forecast::Arima(series, order = c(1, 1, 1), seasonal = list(order = c(1, 1, 0), period = 12))),
+  sarima_110_011 = standard_arima_candidate(function(series) forecast::Arima(series, order = c(1, 1, 0), seasonal = list(order = c(0, 1, 1), period = 12))),
+  auto_arima = standard_arima_candidate(function(series) forecast::auto.arima(series, seasonal = TRUE, stepwise = FALSE, approximation = FALSE)),
+  auto_arima_no_drift = standard_arima_candidate(function(series) forecast::auto.arima(series, seasonal = TRUE, stepwise = FALSE, approximation = FALSE, allowdrift = FALSE)),
+  arima_011_fourier_k1 = fourier_arima_candidate(1, function(series, xreg) forecast::Arima(series, order = c(0, 1, 1), include.drift = TRUE, xreg = xreg)),
+  arima_011_fourier_k2 = fourier_arima_candidate(2, function(series, xreg) forecast::Arima(series, order = c(0, 1, 1), include.drift = TRUE, xreg = xreg)),
+  auto_arima_fourier_k1 = fourier_arima_candidate(1, function(series, xreg) forecast::auto.arima(series, xreg = xreg, seasonal = FALSE, stepwise = FALSE, approximation = FALSE))
+)
+
+fourier_orders <- c(
+  arima_011_no_drift = 0L, arima_011_drift = 0L, arima_111_no_drift = 0L,
+  arima_111_drift = 0L, sarima_011_001_no_drift = 0L, sarima_011_001_drift = 0L,
+  sarima_111_111 = 0L, sarima_011_011 = 0L, sarima_110_110 = 0L,
+  sarima_111_110 = 0L, sarima_110_011 = 0L, auto_arima = 0L,
+  auto_arima_no_drift = 0L, arima_011_fourier_k1 = 1L,
+  arima_011_fourier_k2 = 2L, auto_arima_fourier_k1 = 1L
+)
+
+candidate_results <- bind_rows(Map(evaluate_candidate, names(candidates), unname(candidate_labels), candidates, unname(fourier_orders))) %>%
   mutate(
     Validation_eligible = if_else(
       Residuals_acceptable == "Yes" & Validation_Overfitting_acceptable == "Yes", "Yes", "No"
@@ -157,9 +195,10 @@ if (nrow(acceptable_results) > 0) {
 }
 
 recommended_name <- candidate_labels[[recommended_key]]
-recommended_model <- candidates[[recommended_key]](train_ts)
-recommended_forecast <- forecast::forecast(recommended_model, h = h)
-selected_metadata <- arima_metadata(recommended_model, recommended_key, recommended_name)
+recommended_candidate <- candidates[[recommended_key]](train_ts, h)
+recommended_model <- recommended_candidate$model
+recommended_forecast <- recommended_candidate$forecast
+selected_metadata <- arima_metadata(recommended_model, recommended_key, recommended_name, fourier_orders[[recommended_key]])
 cat("\n", recommendation_note, "\nSelected candidate:", selected_metadata$model_specification, "\n", sep = "")
 
 # This becomes Steven's selected SARIMA result for the group comparison.
@@ -171,13 +210,13 @@ accuracy_C <- metrics(test$index, as.numeric(recommended_forecast$mean), train$i
   ) %>%
   mutate(member = "Steven", model_family = "ARIMA/SARIMA", model = model_specification) %>%
   select(member, model_family, selected_variant, model_specification, model_key,
-         p, d, q, P, D, Q, seasonal_period, includes_drift, includes_mean,
+         p, d, q, P, D, Q, seasonal_period, includes_drift, includes_mean, Fourier_K,
          model, MAE, RMSE, MAPE, MASE, everything())
 write_csv(accuracy_C, "output/member_C_accuracy.csv")
 print(accuracy_C)
 write_csv(
   accuracy_C %>% select(member, model_family, selected_variant, model_specification, model_key,
-                         p, d, q, P, D, Q, seasonal_period, includes_drift, includes_mean),
+                         p, d, q, P, D, Q, seasonal_period, includes_drift, includes_mean, Fourier_K),
   "output/member_C_selected_model_specification.csv"
 )
 
