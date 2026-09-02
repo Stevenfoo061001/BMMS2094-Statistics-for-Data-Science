@@ -28,10 +28,10 @@ Forecast Malaysia's monthly overall Consumer Price Index for low-income househol
 | --- | --- | --- | --- |
 | Huxley | `02_Member_A_snaive.R` | Seasonal Naive | Seasonal Naive baseline |
 | Ooi Mei Yi | `03_Member_B_holt_winters.R` | Exponential smoothing | Holt and Holt-Winters variants |
-| Steven | `04_Member_C_sarima.R` | ARIMA/SARIMA | Manual SARIMA candidates and `auto.arima` |
+| Steven | `04_Member_C_sarima.R` | ARIMA/SARIMA | Manual, automatic, and Fourier-regression candidates |
 | Tan Wei Ching | `05_Member_D_tslm.R` | Time-series regression | Trend-only, seasonal-dummy, and quadratic variants |
 
-Each script selects its variant with the internal validation period, records the selected specification, then evaluates once on the untouched final holdout. Steven's output records the actual automatic ARIMA order, including seasonal terms and drift/mean settings, so it can be reproduced.
+Each script selects its variant with the internal validation period, records the selected specification, then evaluates once on the untouched final holdout. Steven's output records the actual automatic ARIMA order, including seasonal terms, drift/mean settings, and Fourier order, so it can be reproduced.
 
 ## Run order and outputs
 

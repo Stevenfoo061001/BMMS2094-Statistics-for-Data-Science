@@ -110,6 +110,12 @@ candidate_labels <- c(
   sarima_110_110 = "SARIMA(1,1,0)(1,1,0)[12]",
   sarima_111_110 = "SARIMA(1,1,1)(1,1,0)[12]",
   sarima_110_011 = "SARIMA(1,1,0)(0,1,1)[12]",
+  sarima_211_001_drift = "SARIMA(2,1,1)(0,0,1)[12] with drift",
+  sarima_121_001_drift = "SARIMA(1,1,2)(0,0,1)[12] with drift",
+  sarima_221_001_drift = "SARIMA(2,1,2)(0,0,1)[12] with drift",
+  sarima_111_101_drift = "SARIMA(1,1,1)(1,0,1)[12] with drift",
+  sarima_211_101_drift = "SARIMA(2,1,1)(1,0,1)[12] with drift",
+  sarima_221_101_drift = "SARIMA(2,1,2)(1,0,1)[12] with drift",
   auto_arima = "Automatic ARIMA selection",
   auto_arima_no_drift = "Automatic ARIMA selection without drift",
   arima_011_fourier_k1 = "ARIMA(0,1,1) with drift + Fourier K=1",
@@ -148,6 +154,12 @@ candidates <- list(
   sarima_110_110 = standard_arima_candidate(function(series) forecast::Arima(series, order = c(1, 1, 0), seasonal = list(order = c(1, 1, 0), period = 12))),
   sarima_111_110 = standard_arima_candidate(function(series) forecast::Arima(series, order = c(1, 1, 1), seasonal = list(order = c(1, 1, 0), period = 12))),
   sarima_110_011 = standard_arima_candidate(function(series) forecast::Arima(series, order = c(1, 1, 0), seasonal = list(order = c(0, 1, 1), period = 12))),
+  sarima_211_001_drift = standard_arima_candidate(function(series) forecast::Arima(series, order = c(2, 1, 1), seasonal = list(order = c(0, 0, 1), period = 12), include.drift = TRUE)),
+  sarima_121_001_drift = standard_arima_candidate(function(series) forecast::Arima(series, order = c(1, 1, 2), seasonal = list(order = c(0, 0, 1), period = 12), include.drift = TRUE)),
+  sarima_221_001_drift = standard_arima_candidate(function(series) forecast::Arima(series, order = c(2, 1, 2), seasonal = list(order = c(0, 0, 1), period = 12), include.drift = TRUE)),
+  sarima_111_101_drift = standard_arima_candidate(function(series) forecast::Arima(series, order = c(1, 1, 1), seasonal = list(order = c(1, 0, 1), period = 12), include.drift = TRUE)),
+  sarima_211_101_drift = standard_arima_candidate(function(series) forecast::Arima(series, order = c(2, 1, 1), seasonal = list(order = c(1, 0, 1), period = 12), include.drift = TRUE)),
+  sarima_221_101_drift = standard_arima_candidate(function(series) forecast::Arima(series, order = c(2, 1, 2), seasonal = list(order = c(1, 0, 1), period = 12), include.drift = TRUE)),
   auto_arima = standard_arima_candidate(function(series) forecast::auto.arima(series, seasonal = TRUE, stepwise = FALSE, approximation = FALSE)),
   auto_arima_no_drift = standard_arima_candidate(function(series) forecast::auto.arima(series, seasonal = TRUE, stepwise = FALSE, approximation = FALSE, allowdrift = FALSE)),
   arima_011_fourier_k1 = fourier_arima_candidate(1, function(series, xreg) forecast::Arima(series, order = c(0, 1, 1), include.drift = TRUE, xreg = xreg)),
@@ -159,7 +171,10 @@ fourier_orders <- c(
   arima_011_no_drift = 0L, arima_011_drift = 0L, arima_111_no_drift = 0L,
   arima_111_drift = 0L, sarima_011_001_no_drift = 0L, sarima_011_001_drift = 0L,
   sarima_111_111 = 0L, sarima_011_011 = 0L, sarima_110_110 = 0L,
-  sarima_111_110 = 0L, sarima_110_011 = 0L, auto_arima = 0L,
+  sarima_111_110 = 0L, sarima_110_011 = 0L, sarima_211_001_drift = 0L,
+  sarima_121_001_drift = 0L, sarima_221_001_drift = 0L,
+  sarima_111_101_drift = 0L, sarima_211_101_drift = 0L,
+  sarima_221_101_drift = 0L, auto_arima = 0L,
   auto_arima_no_drift = 0L, arima_011_fourier_k1 = 1L,
   arima_011_fourier_k2 = 2L, auto_arima_fourier_k1 = 1L
 )
@@ -167,7 +182,9 @@ fourier_orders <- c(
 candidate_results <- bind_rows(Map(evaluate_candidate, names(candidates), unname(candidate_labels), candidates, unname(fourier_orders))) %>%
   mutate(
     Validation_eligible = if_else(
-      Residuals_acceptable == "Yes" & Validation_Overfitting_acceptable == "Yes", "Yes", "No"
+      Residuals_acceptable == "Yes" &
+        Validation_Overfitting_acceptable == "Yes",
+      "Yes", "No"
     )
   ) %>%
   arrange(desc(Validation_eligible == "Yes"), Validation_RMSE)

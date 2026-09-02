@@ -31,7 +31,7 @@ Members select a variant within their assigned family using only the internal va
 | --- | --- | --- |
 | Huxley | Seasonal Naive | `02_Member_A_snaive.R` |
 | Ooi Mei Yi | Exponential smoothing (Holt/Holt-Winters variants) | `03_Member_B_holt_winters.R` |
-| Steven | ARIMA/SARIMA (manual candidates and automatic ARIMA) | `04_Member_C_sarima.R` |
+| Steven | ARIMA/SARIMA (manual, automatic, and Fourier-regression candidates) | `04_Member_C_sarima.R` |
 | Tan Wei Ching | Time-series regression (trend/seasonal/quadratic variants) | `05_Member_D_tslm.R` |
 
 A model is eligible for final selection only when its Ljung–Box p-value is above 0.05 and its residual ACF is acceptable. Up to three isolated significant ACF spikes are allowed; consecutive or more numerous spikes are not. The final model is the eligible model with the lowest **final-holdout RMSE**—never the lowest-RMSE model overall without diagnostics. Steven's ARIMA/SARIMA variants also use the third, overfitting check during internal validation before the final holdout is evaluated.
