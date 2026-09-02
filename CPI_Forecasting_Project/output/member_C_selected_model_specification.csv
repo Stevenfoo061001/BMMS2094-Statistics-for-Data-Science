@@ -1,2 +1,2 @@
 member,model_family,selected_variant,model_specification,model_key,p,d,q,P,D,Q,seasonal_period,includes_drift,includes_mean,Fourier_K
-Steven,ARIMA/SARIMA,"SARIMA(0,1,1)(0,0,1)[12] with drift","ARIMA(0,1,1)(0,0,1)[12] with drift",sarima_011_001_drift,0,1,1,0,0,1,12,Yes,No,0
+Steven,ARIMA/SARIMA,"SARIMA(2,1,2)(1,0,1)[12] with drift","ARIMA(2,1,2)(1,0,1)[12] with drift",sarima_221_101_drift,2,1,2,1,0,1,12,Yes,No,0
