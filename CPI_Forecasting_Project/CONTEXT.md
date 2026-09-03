@@ -35,7 +35,7 @@ Each script selects its variant with the internal validation period, records the
 
 ## Run order and outputs
 
-Run `01_data_prep.R`, member scripts `02` through `05`, `06_group_comparison.R`, then `08_final_future_forecast.R`. The four core models are Seasonal Naive, exponential smoothing, ARIMA/SARIMA, and TBATS. The group comparison writes all-model and eligible-only rankings plus `selected_final_model.csv`. The final forecast script reads that selected eligible model; it never picks a model only because it has the lowest RMSE.
+Run `01_data_prep.R`, member scripts `02` through `05`, `06_group_comparison.R`, `08_final_future_forecast.R`, then `09_lecture_support.R`. The four core models are Seasonal Naive, exponential smoothing, ARIMA/SARIMA, and TBATS. The group comparison writes all-model and eligible-only rankings plus `selected_final_model.csv`. The final forecast script reads that selected eligible model; it never picks a model only because it has the lowest RMSE. The lecture-support script writes an STL decomposition, COVID-period context figures, a model-summary table, and a concise lecture brief without changing the data or model results.
 
 ## SDG 10 framing
 

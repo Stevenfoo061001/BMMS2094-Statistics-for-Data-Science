@@ -50,6 +50,7 @@ source("scripts/04_Member_C_sarima.R")
 source("scripts/05_Member_D_tbats.R")
 source("scripts/06_group_comparison.R")
 source("scripts/08_final_future_forecast.R")
+source("scripts/09_lecture_support.R")
 ```
 
 The first script loads/install packages through `00_setup.R`. Script 06 stops clearly if no model is diagnostically eligible; in that case, do not run script 08 until additional variants have been tested.
@@ -63,6 +64,7 @@ The first script loads/install packages through `00_setup.R`. Script 06 stops cl
 - `eligible_model_comparison.csv` and `selected_final_model.csv`: final-selection ranking and selected eligible model.
 - `model_comparison_rmse.png`: all-model RMSE chart, colour-coded by final eligibility.
 - `future_cpi_forecast.csv` and `final_future_cpi_forecast.png`: 12-month estimate with 80% and 95% prediction intervals.
+- `LECTURER_BRIEF.md`, `lecturer_model_summary.csv`, and `plots/lecture_support/`: a lecture-ready explanation, exact model-summary table, STL decomposition, COVID-period context plot, and STL remainder plot.
 
 ## SDG 10 framing
 
