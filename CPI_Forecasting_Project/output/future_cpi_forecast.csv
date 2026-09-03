@@ -1,0 +1,13 @@
+date,point_forecast,lower_80,upper_80,lower_95,upper_95,selected_member,model_family,model_specification,forecast_note
+2026-07-01,136.92399022865195,136.39973860194002,137.44824185536388,136.12221655460138,137.7257639027025,Member D,TBATS,TBATS (annual seasonality = 12),"Forecast values are estimates, not guaranteed future outcomes."
+2026-08-01,137.08854511697214,136.2096527246383,137.967437509306,135.74439519622467,138.4326950377196,Member D,TBATS,TBATS (annual seasonality = 12),"Forecast values are estimates, not guaranteed future outcomes."
+2026-09-01,137.25292309585274,136.13086170507907,138.3749844866264,135.53687828463612,138.96896790706936,Member D,TBATS,TBATS (annual seasonality = 12),"Forecast values are estimates, not guaranteed future outcomes."
+2026-10-01,137.41712435548527,136.10004990272498,138.73419880824557,135.40283280314262,139.43141590782793,Member D,TBATS,TBATS (annual seasonality = 12),"Forecast values are estimates, not guaranteed future outcomes."
+2026-11-01,137.58114908585685,136.0980519757501,139.0642461959636,135.31294779022707,139.84935038148663,Member D,TBATS,TBATS (annual seasonality = 12),"Forecast values are estimates, not guaranteed future outcomes."
+2026-12-01,137.74499747675029,136.11593876750794,139.37405618599263,135.25356717877438,140.2364277747262,Member D,TBATS,TBATS (annual seasonality = 12),"Forecast values are estimates, not guaranteed future outcomes."
+2027-01-01,137.90866971774437,136.14867393171272,139.66866550377603,135.21698844146394,140.6003509940248,Member D,TBATS,TBATS (annual seasonality = 12),"Forecast values are estimates, not guaranteed future outcomes."
+2027-02-01,138.07216599821413,136.19307855271373,139.95125344371453,135.19834974610174,140.94598225032652,Member D,TBATS,TBATS (annual seasonality = 12),"Forecast values are estimates, not guaranteed future outcomes."
+2027-03-01,138.23548650733093,136.24698979439344,140.22398322026842,135.19434322014877,141.2766297945131,Member D,TBATS,TBATS (annual seasonality = 12),"Forecast values are estimates, not guaranteed future outcomes."
+2027-04-01,138.3986314340628,136.30885466963178,140.4884081984938,135.20259367472937,141.59466919339621,Member D,TBATS,TBATS (annual seasonality = 12),"Forecast values are estimates, not guaranteed future outcomes."
+2027-05-01,138.5616009671746,136.3775117804808,140.7456901538684,135.2213248050335,141.9018771293157,Member D,TBATS,TBATS (annual seasonality = 12),"Forecast values are estimates, not guaranteed future outcomes."
+2027-06-01,138.72439529522825,136.45206445930177,140.99672613115473,135.2491651764284,142.1996254140281,Member D,TBATS,TBATS (annual seasonality = 12),"Forecast values are estimates, not guaranteed future outcomes."
