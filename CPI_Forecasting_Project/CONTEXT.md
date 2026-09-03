@@ -29,13 +29,13 @@ Forecast Malaysia's monthly overall Consumer Price Index for low-income househol
 | Huxley | `02_Member_A_snaive.R` | Seasonal Naive | Seasonal Naive baseline |
 | Ooi Mei Yi | `03_Member_B_holt_winters.R` | Exponential smoothing | Holt and Holt-Winters variants |
 | Steven | `04_Member_C_sarima.R` | ARIMA/SARIMA | Manual, automatic, and Fourier-regression candidates |
-| Tan Wei Ching | `05_Member_D_tslm.R` | Time-series regression | Trend-only, seasonal-dummy, and quadratic variants |
+| Member D | `05_Member_D_tbats.R` | TBATS | Annual seasonality = 12 |
 
 Each script selects its variant with the internal validation period, records the selected specification, then evaluates once on the untouched final holdout. Steven's output records the actual automatic ARIMA order, including seasonal terms, drift/mean settings, and Fourier order, so it can be reproduced.
 
 ## Run order and outputs
 
-Run `01_data_prep.R`, member scripts `02` through `05`, `06_group_comparison.R`, then `08_final_future_forecast.R`. The group comparison writes all-model and eligible-only rankings plus `selected_final_model.csv`. The final forecast script reads that selected eligible model; it never picks a model only because it has the lowest RMSE.
+Run `01_data_prep.R`, member scripts `02` through `05`, `06_group_comparison.R`, then `08_final_future_forecast.R`. The four core models are Seasonal Naive, exponential smoothing, ARIMA/SARIMA, and TBATS. The group comparison writes all-model and eligible-only rankings plus `selected_final_model.csv`. The final forecast script reads that selected eligible model; it never picks a model only because it has the lowest RMSE.
 
 ## SDG 10 framing
 

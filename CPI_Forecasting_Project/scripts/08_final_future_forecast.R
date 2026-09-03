@@ -51,14 +51,12 @@ fit_final_model <- function(winner, series, horizon) {
     return(forecast::forecast(refitted, h = horizon))
   }
 
-  if (member == "Tan Wei Ching") {
-    candidates <- list(
-      "Trend only" = function() forecast(tslm(series ~ trend), h = horizon),
-      "Trend + monthly dummies" = function() forecast(tslm(series ~ trend + season), h = horizon),
-      "Quadratic trend + monthly dummies" = function() forecast(tslm(series ~ trend + I(trend^2) + season), h = horizon)
-    )
-    if (!variant %in% names(candidates)) stop("Unrecognised time-series regression variant: ", variant)
-    return(candidates[[variant]]())
+  if (member == "Member D") {
+    if (variant != "TBATS (annual seasonality = 12)") {
+      stop("Unrecognised TBATS variant: ", variant)
+    }
+    model <- tbats(series, seasonal.periods = seasonal_period, use.box.cox = NULL)
+    return(forecast(model, h = horizon))
   }
 
   stop("The selected model is not recognised by the final forecasting script.")
