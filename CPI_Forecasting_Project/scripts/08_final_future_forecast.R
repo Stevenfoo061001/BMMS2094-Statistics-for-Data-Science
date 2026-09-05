@@ -8,8 +8,8 @@ if (!file.exists("output/selected_final_model.csv")) {
 
 prepared <- readRDS("data/overall_cpi_prepared.rds")
 winner <- read_csv("output/selected_final_model.csv", show_col_types = FALSE)
-if (nrow(winner) != 1 || winner$Residuals_acceptable[[1]] != "Yes") {
-  stop("selected_final_model.csv must contain exactly one diagnostically acceptable model.")
+if (nrow(winner) != 1 || winner$Residuals_acceptable[[1]] != "Yes" || winner$Overfitting_acceptable[[1]] != "Yes") {
+  stop("selected_final_model.csv must contain exactly one model passing residual diagnostics and the overfitting check.")
 }
 
 all_ts <- ts(prepared$index, start = c(prepared$year[1], prepared$month_number[1]), frequency = seasonal_period)

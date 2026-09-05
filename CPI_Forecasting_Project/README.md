@@ -34,9 +34,9 @@ Members select a variant within their assigned family using only the internal va
 | Ooi Mei Yi | ARIMA/SARIMA (manual, automatic, and Fourier-regression candidates) | `04_Member_C_sarima.R` |
 | Steven | TBATS (annual seasonality = 12) | `05_Member_D_tbats.R` |
 
-A model is eligible for final selection only when its Ljung–Box p-value is above 0.05 and its residual ACF is acceptable. Up to three isolated significant ACF spikes are allowed; consecutive or more numerous spikes are not. The final model is the eligible model with the lowest **final-holdout RMSE**—never the lowest-RMSE model overall without diagnostics. Ooi Mei Yi's ARIMA/SARIMA variants also use the third, overfitting check during internal validation before the final holdout is evaluated.
+A model is eligible for final selection only when its Ljung–Box p-value is above 0.05, its residual ACF is acceptable, and it passes the overfitting check. Up to three isolated significant ACF spikes are allowed; consecutive or more numerous spikes are not. A test-to-training RMSE ratio below 1.5 is required. The final model is the eligible model with the lowest **final-holdout RMSE**—never the lowest-RMSE model overall without these checks. Ooi Mei Yi's ARIMA/SARIMA variants also use the overfitting check during internal validation before the final holdout is evaluated.
 
-Each member accuracy output also compares training and final-holdout RMSE/MAPE. A test-to-training RMSE ratio of 1.5 or above is flagged as a possible overfitting warning; it is interpreted alongside holdout accuracy and residual diagnostics rather than used as an automatic rejection rule.
+Each member accuracy output also compares training and final-holdout RMSE/MAPE. A test-to-training RMSE ratio of 1.5 or above is an overfitting warning and makes a model ineligible for final selection.
 
 ## Run order in Posit Cloud
 

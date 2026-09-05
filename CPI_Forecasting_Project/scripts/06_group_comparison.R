@@ -1,4 +1,4 @@
-# 06_group_comparison.R - select the final model from diagnostically eligible models.
+# 06_group_comparison.R - select the final model from diagnostically and generalisation-eligible models.
 
 source("scripts/00_setup.R")
 required_files <- paste0("output/member_", LETTERS[1:4], "_accuracy.csv")
@@ -15,13 +15,14 @@ if (length(missing_columns) > 0) {
 
 diagnostics_summary <- all_model_results %>%
   mutate(Final_eligible = if_else(
-    Residuals_acceptable == "Yes", "Yes", "No"
+    Residuals_acceptable == "Yes" & Overfitting_acceptable == "Yes", "Yes", "No"
   )) %>%
   arrange(RMSE)
 write_csv(diagnostics_summary, "output/model_diagnostics_summary.csv")
 
 # This is the accuracy ranking of every tested model. It is not the final
-# selection ranking because low error cannot override failed diagnostics.
+# selection ranking because low error cannot override failed diagnostics or an
+# overfitting warning.
 accuracy_ranking <- diagnostics_summary %>% arrange(RMSE)
 write_csv(accuracy_ranking, "output/model_comparison_summary.csv")
 
@@ -32,7 +33,7 @@ write_csv(eligible_ranking, "output/eligible_model_comparison.csv")
 
 if (nrow(eligible_ranking) == 0) {
   stop(
-    "No model passed the final residual checks: Ljung-Box and residual ACF. ",
+    "No model passed the final eligibility checks: Ljung-Box, residual ACF, and overfitting. ",
     "No final model or future forecast may be selected; test additional variants."
   )
 }
@@ -40,7 +41,7 @@ if (nrow(eligible_ranking) == 0) {
 selected_final_model <- eligible_ranking %>% slice(1)
 write_csv(selected_final_model, "output/selected_final_model.csv")
 
-print(accuracy_ranking %>% select(member, model_specification, RMSE, Residuals_acceptable, Final_eligible))
+print(accuracy_ranking %>% select(member, model_specification, RMSE, Residuals_acceptable, Overfitting_acceptable, Final_eligible))
 cat("\nSelected final model:\n")
 print(selected_final_model %>% select(member, model_family, model_specification, RMSE, Diagnostic_note))
 
@@ -53,7 +54,7 @@ plot <- ggplot(
   scale_fill_manual(values = c("Yes" = "#1b9e77", "No" = "#d95f02")) +
   labs(
     title = "Group Forecast Comparison: Holdout RMSE",
-    subtitle = "Green models passed final residual checks; the overfitting comparison remains a reported holdout warning",
+    subtitle = "Green models passed final residual diagnostics and the overfitting check",
     x = "Model specification", y = "RMSE (CPI index points)", fill = "Final eligible"
   ) +
   theme_minimal()
