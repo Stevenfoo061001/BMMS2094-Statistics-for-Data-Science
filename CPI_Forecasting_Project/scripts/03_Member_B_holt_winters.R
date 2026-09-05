@@ -1,4 +1,4 @@
-# Ooi Mei Yi - select the best exponential-smoothing candidate.
+# Tan Wei Ching - select the best exponential-smoothing candidate.
 
 source("scripts/00_setup.R")
 if (!file.exists("data/training_data.rds")) source("scripts/01_data_prep.R")
@@ -61,9 +61,9 @@ if (nrow(acceptable_results) > 0) {
 fit <- candidates[[recommended_name]](train_ts, h)
 cat("\n", recommendation_note, "\nSelected candidate:", recommended_name, "\n", sep = "")
 
-save_plot(autoplot(train_ts) + labs(title = "Ooi Mei Yi: Overall CPI Training Series", x = "Year", y = "CPI index") + theme_minimal(), file.path(out, "Member_B_01_autoplot.png"))
-save_plot(ggseasonplot(train_ts, year.labels = TRUE) + labs(title = "Ooi Mei Yi: CPI Seasonal Plot", y = "CPI index") + theme_minimal(), file.path(out, "Member_B_02_season.png"))
-save_plot(autoplot(fit) + autolayer(test_ts, series = "Actual test CPI") + labs(title = paste("Ooi Mei Yi:", recommended_name, "18-Month Holdout Forecast"), x = "Year", y = "CPI index") + theme_minimal(), file.path(out, "Member_B_03_forecast.png"))
+save_plot(autoplot(train_ts) + labs(title = "Tan Wei Ching: Overall CPI Training Series", x = "Year", y = "CPI index") + theme_minimal(), file.path(out, "Member_B_01_autoplot.png"))
+save_plot(ggseasonplot(train_ts, year.labels = TRUE) + labs(title = "Tan Wei Ching: CPI Seasonal Plot", y = "CPI index") + theme_minimal(), file.path(out, "Member_B_02_season.png"))
+save_plot(autoplot(fit) + autolayer(test_ts, series = "Actual test CPI") + labs(title = paste("Tan Wei Ching:", recommended_name, "18-Month Holdout Forecast"), x = "Year", y = "CPI index") + theme_minimal(), file.path(out, "Member_B_03_forecast.png"))
 png(file.path(out, "Member_B_04_residuals.png"), width = 3300, height = 2400, res = 300)
 checkresiduals(fit, lag = 24)
 dev.off()
@@ -71,7 +71,7 @@ dev.off()
 accuracy_B <- metrics(test$index, as.numeric(fit$mean), train$index) %>%
   bind_cols(residual_diagnostics(fit, fitdf = 0), overfitting_diagnostic(fit, test_ts)) %>%
   mutate(
-    member = "Ooi Mei Yi",
+    member = "Tan Wei Ching",
     model_family = "Exponential smoothing",
     selected_variant = recommended_name,
     model_specification = recommended_name,

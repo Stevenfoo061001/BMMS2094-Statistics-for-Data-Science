@@ -1,4 +1,4 @@
-# Member D - TBATS forecasting model.
+# Steven - TBATS forecasting model.
 # Run after 01_data_prep.R. TBATS is one of the four core group models.
 
 source("scripts/00_setup.R")
@@ -45,7 +45,7 @@ forecast_D <- fit$forecast
 
 save_plot(
   autoplot(train_ts) +
-    labs(title = "Member D: Overall CPI Training Series", x = "Year", y = "CPI index") +
+    labs(title = "Steven: Overall CPI Training Series", x = "Year", y = "CPI index") +
     theme_minimal(),
   file.path(out, "Member_D_01_autoplot.png")
 )
@@ -53,7 +53,7 @@ save_plot(
 save_plot(
   autoplot(forecast_D) +
     autolayer(test_ts, series = "Actual test CPI") +
-    labs(title = "Member D: TBATS 18-Month Holdout Forecast", x = "Year", y = "CPI index") +
+    labs(title = "Steven: TBATS 18-Month Holdout Forecast", x = "Year", y = "CPI index") +
     theme_minimal(),
   file.path(out, "Member_D_02_forecast.png")
 )
@@ -68,7 +68,7 @@ accuracy_D <- metrics(test$index, as.numeric(forecast_D$mean), train$index) %>%
     overfitting_diagnostic(forecast_D, test_ts)
   ) %>%
   mutate(
-    member = "Member D",
+    member = "Steven",
     model_family = "TBATS",
     selected_variant = "TBATS (annual seasonality = 12)",
     model_specification = selected_variant,

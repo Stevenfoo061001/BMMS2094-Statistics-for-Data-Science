@@ -30,11 +30,11 @@ Members select a variant within their assigned family using only the internal va
 | Member | Model family | Script |
 | --- | --- | --- |
 | Huxley | Seasonal Naive | `02_Member_A_snaive.R` |
-| Ooi Mei Yi | Exponential smoothing (Holt/Holt-Winters variants) | `03_Member_B_holt_winters.R` |
-| Steven | ARIMA/SARIMA (manual, automatic, and Fourier-regression candidates) | `04_Member_C_sarima.R` |
-| Member D | TBATS (annual seasonality = 12) | `05_Member_D_tbats.R` |
+| Tan Wei Ching | Exponential smoothing (Holt/Holt-Winters variants) | `03_Member_B_holt_winters.R` |
+| Ooi Mei Yi | ARIMA/SARIMA (manual, automatic, and Fourier-regression candidates) | `04_Member_C_sarima.R` |
+| Steven | TBATS (annual seasonality = 12) | `05_Member_D_tbats.R` |
 
-A model is eligible for final selection only when its Ljung–Box p-value is above 0.05 and its residual ACF is acceptable. Up to three isolated significant ACF spikes are allowed; consecutive or more numerous spikes are not. The final model is the eligible model with the lowest **final-holdout RMSE**—never the lowest-RMSE model overall without diagnostics. Steven's ARIMA/SARIMA variants also use the third, overfitting check during internal validation before the final holdout is evaluated.
+A model is eligible for final selection only when its Ljung–Box p-value is above 0.05 and its residual ACF is acceptable. Up to three isolated significant ACF spikes are allowed; consecutive or more numerous spikes are not. The final model is the eligible model with the lowest **final-holdout RMSE**—never the lowest-RMSE model overall without diagnostics. Ooi Mei Yi's ARIMA/SARIMA variants also use the third, overfitting check during internal validation before the final holdout is evaluated.
 
 Each member accuracy output also compares training and final-holdout RMSE/MAPE. A test-to-training RMSE ratio of 1.5 or above is flagged as a possible overfitting warning; it is interpreted alongside holdout accuracy and residual diagnostics rather than used as an automatic rejection rule.
 
@@ -58,7 +58,7 @@ The first script loads/install packages through `00_setup.R`. Script 06 stops cl
 ## Main generated files
 
 - `member_A_accuracy.csv` through `member_D_accuracy.csv`: selected variant, accuracy, full residual diagnostics, and factual diagnostic note for Seasonal Naive, exponential smoothing, ARIMA/SARIMA, and TBATS.
-- `member_C_candidate_results.csv` and `member_C_selected_model_specification.csv`: Steven's tested ARIMA/SARIMA orders and the actual selected ARIMA specification.
+- `member_C_candidate_results.csv` and `member_C_selected_model_specification.csv`: Ooi Mei Yi's tested ARIMA/SARIMA orders and the actual selected ARIMA specification.
 - `model_diagnostics_summary.csv`: all models with diagnostics and eligibility.
 - `model_comparison_summary.csv`: accuracy ranking of all models.
 - `eligible_model_comparison.csv` and `selected_final_model.csv`: final-selection ranking and selected eligible model.

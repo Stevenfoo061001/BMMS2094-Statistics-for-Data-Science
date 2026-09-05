@@ -20,18 +20,18 @@ Forecast Malaysia's monthly overall Consumer Price Index for low-income househol
 - The Ljung–Box p-value must be above 0.05 for residuals to be acceptable.
 - Up to three isolated residual-ACF spikes are acceptable. Consecutive spikes or more than three spikes are unacceptable.
 - Training-versus-final-test RMSE/MAPE is recorded as an overfitting check. A test-to-training RMSE ratio of 1.5 or above is a warning for interpretation, not an automatic rejection rule.
-- The final model is the lowest-final-holdout-RMSE model among models passing the final Ljung–Box and residual-ACF checks. Steven's candidate selection also applies the overfitting check during internal validation; the final holdout overfitting comparison is reported as a generalisation warning, not used to tune against the untouched test set.
+- The final model is the lowest-final-holdout-RMSE model among models passing the final Ljung–Box and residual-ACF checks. Ooi Mei Yi's candidate selection also applies the overfitting check during internal validation; the final holdout overfitting comparison is reported as a generalisation warning, not used to tune against the untouched test set.
 
 ## Group allocation
 
 | Member | Script | Model family | Variant selection |
 | --- | --- | --- | --- |
 | Huxley | `02_Member_A_snaive.R` | Seasonal Naive | Seasonal Naive baseline |
-| Ooi Mei Yi | `03_Member_B_holt_winters.R` | Exponential smoothing | Holt and Holt-Winters variants |
-| Steven | `04_Member_C_sarima.R` | ARIMA/SARIMA | Manual, automatic, and Fourier-regression candidates |
-| Member D | `05_Member_D_tbats.R` | TBATS | Annual seasonality = 12 |
+| Tan Wei Ching | `03_Member_B_holt_winters.R` | Exponential smoothing | Holt and Holt-Winters variants |
+| Ooi Mei Yi | `04_Member_C_sarima.R` | ARIMA/SARIMA | Manual, automatic, and Fourier-regression candidates |
+| Steven | `05_Member_D_tbats.R` | TBATS | Annual seasonality = 12 |
 
-Each script selects its variant with the internal validation period, records the selected specification, then evaluates once on the untouched final holdout. Steven's output records the actual automatic ARIMA order, including seasonal terms, drift/mean settings, and Fourier order, so it can be reproduced.
+Each script selects its variant with the internal validation period, records the selected specification, then evaluates once on the untouched final holdout. Ooi Mei Yi's output records the actual automatic ARIMA order, including seasonal terms, drift/mean settings, and Fourier order, so it can be reproduced.
 
 ## Run order and outputs
 

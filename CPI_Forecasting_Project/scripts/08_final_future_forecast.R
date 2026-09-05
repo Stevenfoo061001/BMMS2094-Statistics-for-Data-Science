@@ -20,7 +20,7 @@ fit_final_model <- function(winner, series, horizon) {
 
   if (member == "Huxley") return(snaive(series, h = horizon))
 
-  if (member == "Ooi Mei Yi") {
+  if (member == "Tan Wei Ching") {
     candidates <- list(
       "Holt linear trend" = function() holt(series, damped = FALSE, h = horizon),
       "Damped Holt trend" = function() holt(series, damped = TRUE, h = horizon),
@@ -31,10 +31,10 @@ fit_final_model <- function(winner, series, horizon) {
     return(candidates[[variant]]())
   }
 
-  if (member == "Steven") {
+  if (member == "Ooi Mei Yi") {
     required_order_fields <- c("p", "d", "q", "P", "D", "Q", "seasonal_period", "includes_drift", "includes_mean")
     if (!all(required_order_fields %in% names(winner))) {
-      stop("Steven's selected model is missing its saved ARIMA order; re-run scripts 04 and 06.")
+      stop("Ooi Mei Yi's selected model is missing its saved ARIMA order; re-run scripts 04 and 06.")
     }
     order <- as.integer(unlist(winner[1, c("p", "d", "q")]))
     seasonal_order <- as.integer(unlist(winner[1, c("P", "D", "Q")]))
@@ -51,7 +51,7 @@ fit_final_model <- function(winner, series, horizon) {
     return(forecast::forecast(refitted, h = horizon))
   }
 
-  if (member == "Member D") {
+  if (member == "Steven") {
     if (variant != "TBATS (annual seasonality = 12)") {
       stop("Unrecognised TBATS variant: ", variant)
     }

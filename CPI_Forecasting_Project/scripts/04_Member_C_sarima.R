@@ -21,17 +21,17 @@ out <- "output/plots/Member_C_sarima"
 first_difference <- diff(train_ts)
 save_plot(
   autoplot(train_ts) +
-    labs(title = "Steven: Overall CPI Training Series", x = "Year", y = "CPI index") +
+    labs(title = "Ooi Mei Yi: Overall CPI Training Series", x = "Year", y = "CPI index") +
     theme_minimal(),
   file.path(out, "Member_C_01_autoplot.png")
 )
 
 png(file.path(out, "Member_C_02_acf.png"), width = 3300, height = 1500, res = 300)
-Acf(first_difference, lag.max = 36, main = "Steven: First-Differenced CPI ACF")
+Acf(first_difference, lag.max = 36, main = "Ooi Mei Yi: First-Differenced CPI ACF")
 dev.off()
 
 png(file.path(out, "Member_C_03_pacf.png"), width = 3300, height = 1500, res = 300)
-Pacf(first_difference, lag.max = 36, main = "Steven: First-Differenced CPI PACF")
+Pacf(first_difference, lag.max = 36, main = "Ooi Mei Yi: First-Differenced CPI PACF")
 dev.off()
 
 arima_metadata <- function(model, model_key, selected_variant, fourier_k = 0L) {
@@ -111,11 +111,11 @@ candidate_labels <- c(
   sarima_111_110 = "SARIMA(1,1,1)(1,1,0)[12]",
   sarima_110_011 = "SARIMA(1,1,0)(0,1,1)[12]",
   sarima_211_001_drift = "SARIMA(2,1,1)(0,0,1)[12] with drift",
-  sarima_121_001_drift = "SARIMA(1,1,2)(0,0,1)[12] with drift",
-  sarima_221_001_drift = "SARIMA(2,1,2)(0,0,1)[12] with drift",
+  sarima_112_001_drift = "SARIMA(1,1,2)(0,0,1)[12] with drift",
+  sarima_212_001_drift = "SARIMA(2,1,2)(0,0,1)[12] with drift",
   sarima_111_101_drift = "SARIMA(1,1,1)(1,0,1)[12] with drift",
   sarima_211_101_drift = "SARIMA(2,1,1)(1,0,1)[12] with drift",
-  sarima_221_101_drift = "SARIMA(2,1,2)(1,0,1)[12] with drift",
+  sarima_212_101_drift = "SARIMA(2,1,2)(1,0,1)[12] with drift",
   auto_arima = "Automatic ARIMA selection",
   auto_arima_no_drift = "Automatic ARIMA selection without drift",
   arima_011_fourier_k1 = "ARIMA(0,1,1) with drift + Fourier K=1",
@@ -155,11 +155,11 @@ candidates <- list(
   sarima_111_110 = standard_arima_candidate(function(series) forecast::Arima(series, order = c(1, 1, 1), seasonal = list(order = c(1, 1, 0), period = 12))),
   sarima_110_011 = standard_arima_candidate(function(series) forecast::Arima(series, order = c(1, 1, 0), seasonal = list(order = c(0, 1, 1), period = 12))),
   sarima_211_001_drift = standard_arima_candidate(function(series) forecast::Arima(series, order = c(2, 1, 1), seasonal = list(order = c(0, 0, 1), period = 12), include.drift = TRUE)),
-  sarima_121_001_drift = standard_arima_candidate(function(series) forecast::Arima(series, order = c(1, 1, 2), seasonal = list(order = c(0, 0, 1), period = 12), include.drift = TRUE)),
-  sarima_221_001_drift = standard_arima_candidate(function(series) forecast::Arima(series, order = c(2, 1, 2), seasonal = list(order = c(0, 0, 1), period = 12), include.drift = TRUE)),
+  sarima_112_001_drift = standard_arima_candidate(function(series) forecast::Arima(series, order = c(1, 1, 2), seasonal = list(order = c(0, 0, 1), period = 12), include.drift = TRUE)),
+  sarima_212_001_drift = standard_arima_candidate(function(series) forecast::Arima(series, order = c(2, 1, 2), seasonal = list(order = c(0, 0, 1), period = 12), include.drift = TRUE)),
   sarima_111_101_drift = standard_arima_candidate(function(series) forecast::Arima(series, order = c(1, 1, 1), seasonal = list(order = c(1, 0, 1), period = 12), include.drift = TRUE)),
   sarima_211_101_drift = standard_arima_candidate(function(series) forecast::Arima(series, order = c(2, 1, 1), seasonal = list(order = c(1, 0, 1), period = 12), include.drift = TRUE)),
-  sarima_221_101_drift = standard_arima_candidate(function(series) forecast::Arima(series, order = c(2, 1, 2), seasonal = list(order = c(1, 0, 1), period = 12), include.drift = TRUE)),
+  sarima_212_101_drift = standard_arima_candidate(function(series) forecast::Arima(series, order = c(2, 1, 2), seasonal = list(order = c(1, 0, 1), period = 12), include.drift = TRUE)),
   auto_arima = standard_arima_candidate(function(series) forecast::auto.arima(series, seasonal = TRUE, stepwise = FALSE, approximation = FALSE)),
   auto_arima_no_drift = standard_arima_candidate(function(series) forecast::auto.arima(series, seasonal = TRUE, stepwise = FALSE, approximation = FALSE, allowdrift = FALSE)),
   arima_011_fourier_k1 = fourier_arima_candidate(1, function(series, xreg) forecast::Arima(series, order = c(0, 1, 1), include.drift = TRUE, xreg = xreg)),
@@ -172,9 +172,9 @@ fourier_orders <- c(
   arima_111_drift = 0L, sarima_011_001_no_drift = 0L, sarima_011_001_drift = 0L,
   sarima_111_111 = 0L, sarima_011_011 = 0L, sarima_110_110 = 0L,
   sarima_111_110 = 0L, sarima_110_011 = 0L, sarima_211_001_drift = 0L,
-  sarima_121_001_drift = 0L, sarima_221_001_drift = 0L,
+  sarima_112_001_drift = 0L, sarima_212_001_drift = 0L,
   sarima_111_101_drift = 0L, sarima_211_101_drift = 0L,
-  sarima_221_101_drift = 0L, auto_arima = 0L,
+  sarima_212_101_drift = 0L, auto_arima = 0L,
   auto_arima_no_drift = 0L, arima_011_fourier_k1 = 1L,
   arima_011_fourier_k2 = 2L, auto_arima_fourier_k1 = 1L
 )
@@ -218,14 +218,14 @@ recommended_forecast <- recommended_candidate$forecast
 selected_metadata <- arima_metadata(recommended_model, recommended_key, recommended_name, fourier_orders[[recommended_key]])
 cat("\n", recommendation_note, "\nSelected candidate:", selected_metadata$model_specification, "\n", sep = "")
 
-# This becomes Steven's selected SARIMA result for the group comparison.
+# This becomes Ooi Mei Yi's selected SARIMA result for the group comparison.
 accuracy_C <- metrics(test$index, as.numeric(recommended_forecast$mean), train$index) %>%
   bind_cols(
     selected_metadata,
     residual_diagnostics(recommended_model, fitdf = length(coef(recommended_model))),
     overfitting_diagnostic(recommended_forecast, test_ts)
   ) %>%
-  mutate(member = "Steven", model_family = "ARIMA/SARIMA", model = model_specification) %>%
+  mutate(member = "Ooi Mei Yi", model_family = "ARIMA/SARIMA", model = model_specification) %>%
   select(member, model_family, selected_variant, model_specification, model_key,
          p, d, q, P, D, Q, seasonal_period, includes_drift, includes_mean, Fourier_K,
          model, MAE, RMSE, MAPE, MASE, everything())
@@ -240,13 +240,13 @@ write_csv(
 comparison_plot <- ggplot(candidate_results, aes(reorder(model_specification, Validation_RMSE), Validation_RMSE, fill = Validation_eligible)) +
   geom_col() + coord_flip() +
   scale_fill_manual(values = c("Yes" = "#1b9e77", "No" = "#d95f02")) +
-  labs(title = "Steven: ARIMA/SARIMA Candidate Comparison", subtitle = "Green = passed Ljung-Box, residual ACF, and validation overfitting checks", x = "ARIMA/SARIMA candidate", y = "Validation RMSE", fill = "Validation eligible") +
+  labs(title = "Ooi Mei Yi: ARIMA/SARIMA Candidate Comparison", subtitle = "Green = passed Ljung-Box, residual ACF, and validation overfitting checks", x = "ARIMA/SARIMA candidate", y = "Validation RMSE", fill = "Validation eligible") +
   theme_minimal()
 save_plot(comparison_plot, file.path(out, "Member_C_06_candidate_comparison.png"), width = 12, height = 6)
 
 forecast_plot <- autoplot(recommended_forecast) +
   autolayer(test_ts, series = "Actual test CPI") +
-  labs(title = paste("Steven: Recommended", selected_metadata$model_specification, "Forecast"), x = "Year", y = "CPI index") +
+  labs(title = paste("Ooi Mei Yi: Recommended", selected_metadata$model_specification, "Forecast"), x = "Year", y = "CPI index") +
   theme_minimal()
 save_plot(forecast_plot, file.path(out, "Member_C_04_forecast.png"))
 save_plot(forecast_plot, file.path(out, "Member_C_07_recommended_forecast.png"))
