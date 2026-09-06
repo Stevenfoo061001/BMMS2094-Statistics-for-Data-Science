@@ -25,8 +25,8 @@ seasonal_period <- 12
 # are rejected only when they are numerous or form a consecutive pattern.
 max_isolated_acf_spikes <- 3
 # A large gap between training and unseen-test error can indicate overfitting.
-# This is a warning threshold for interpretation, not a final-selection rule.
-overfit_rmse_ratio_warning <- 1.5
+# Models at or above this threshold are ineligible for final selection.
+overfit_rmse_ratio_warning <- 1.3
 
 save_plot <- function(plot_object, filename, width = 11, height = 5) {
   dir.create(dirname(filename), recursive = TRUE, showWarnings = FALSE)
