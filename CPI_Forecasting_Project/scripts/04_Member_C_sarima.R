@@ -256,10 +256,17 @@ forecast_plot <- autoplot(recommended_forecast) +
 save_plot(forecast_plot, file.path(out, "Member_C_04_forecast.png"))
 save_plot(forecast_plot, file.path(out, "Member_C_07_recommended_forecast.png"))
 
+# forecast::checkresiduals() derives its heading from the fitted object's
+# default method label ("ARIMA"), even when seasonal terms are present.
+# Override only the display copy so every diagnostic graph uses the same
+# human-readable ARIMA/SARIMA specification as the tables and forecast plot.
+residual_plot_model <- recommended_model
+residual_plot_model$method <- selected_metadata$model_specification
+
 png(file.path(out, "Member_C_05_residuals.png"), width = 3300, height = 2400, res = 300)
-checkresiduals(recommended_model, lag = 24)
+checkresiduals(residual_plot_model, lag = 24)
 dev.off()
 
 png(file.path(out, "Member_C_08_recommended_residuals.png"), width = 3300, height = 2400, res = 300)
-checkresiduals(recommended_model, lag = 24)
+checkresiduals(residual_plot_model, lag = 24)
 dev.off()
