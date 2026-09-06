@@ -42,6 +42,11 @@ arima_metadata <- function(model, model_key, selected_variant, fourier_k = 0L) {
   p <- get_order("p"); d <- get_order("d"); q <- get_order("q")
   P <- get_order("P"); D <- get_order("D"); Q <- get_order("Q")
   m <- get_order("m", seasonal_period)
+  base_specification <- if (any(c(P, D, Q) != 0L)) {
+    paste0("SARIMA(", p, ",", d, ",", q, ")(", P, ",", D, ",", Q, ")[", m, "]")
+  } else {
+    paste0("ARIMA(", p, ",", d, ",", q, ")")
+  }
   coefficient_names <- names(coef(model))
   includes_drift <- "drift" %in% coefficient_names
   includes_mean <- any(c("intercept", "mean") %in% coefficient_names)
@@ -51,7 +56,7 @@ arima_metadata <- function(model, model_key, selected_variant, fourier_k = 0L) {
   tibble(
     model_key = model_key,
     selected_variant = selected_variant,
-    model_specification = paste0("ARIMA(", p, ",", d, ",", q, ")(", P, ",", D, ",", Q, ")[", m, "]", suffix, fourier_suffix),
+    model_specification = paste0(base_specification, suffix, fourier_suffix),
     p = p, d = d, q = q, P = P, D = D, Q = Q,
     seasonal_period = m,
     includes_drift = if_else(includes_drift, "Yes", "No"),

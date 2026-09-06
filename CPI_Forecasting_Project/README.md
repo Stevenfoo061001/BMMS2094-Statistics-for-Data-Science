@@ -58,7 +58,7 @@ The first script loads/install packages through `00_setup.R`. Script 06 stops cl
 ## Main generated files
 
 - `member_A_accuracy.csv` through `member_D_accuracy.csv`: selected variant, accuracy, full residual diagnostics, and factual diagnostic note for Seasonal Naive, exponential smoothing, ARIMA/SARIMA, and TBATS.
-- `member_C_candidate_results.csv` and `member_C_selected_model_specification.csv`: Ooi Mei Yi's tested ARIMA/SARIMA orders and the actual selected ARIMA specification.
+- `member_C_candidate_results.csv` and `member_C_selected_model_specification.csv`: Ooi Mei Yi's tested ARIMA/SARIMA orders and the actual selected ARIMA or SARIMA specification.
 - `model_diagnostics_summary.csv`: all models with diagnostics and eligibility.
 - `model_comparison_summary.csv`: accuracy ranking of all models.
 - `eligible_model_comparison.csv` and `selected_final_model.csv`: final-selection ranking and selected eligible model.
